@@ -10,3 +10,4 @@ sample within subpolygon   | or across full AOI
 
 ## Populate neighbor pixels for contextual information
 ![](sample_neighborhood.png)
+
