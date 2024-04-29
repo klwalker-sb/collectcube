@@ -9,5 +9,5 @@ sample within subpolygon   | or across full AOI
 ![](images/shift_sample_pts.png)
 
 ## Populate neighbor pixels for contextual information
-![](sample_neighborhood.png)
+![](images/sample_neighborhood.png)
 
