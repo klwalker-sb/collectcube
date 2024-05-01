@@ -15,7 +15,8 @@ import pandas as pd
 import rasterio as rio
 from rasterio import plot
 from rasterio.plot import show
-#import xarray
+import sqlite3
+import sqlalchemy as sa
 import matplotlib.pyplot as plt
 
 def get_sample_in_poly(aoi_in, sampsize, subpoly=None):
@@ -191,3 +192,33 @@ def make_pixel_boxes_from_pts(pts_in, poly_file_out,res):
     gdf = gpd.GeoDataFrame(df, crs=pts.crs, geometry=df['geometry'])
     gdf.to_file(poly_file_out, driver='ESRI Shapefile')
     return gdf
+
+def make_pixel_table(pts_in):
+    if isinstance(pts_in, gpd.GeoDataFrame):
+        pts = pts_in
+    else:
+        pts = gpd.read_file(pts_in)
+    
+    ptsll = pts.to_crs(4326)
+    ptsll['cent_lat'] = ptsll['geometry'].y
+    ptsll['cent_long'] = ptsll['geometry'].x
+    
+    pts2 = pd.merge(pts,ptsll[['PID','cent_lat', 'cent_long']],on='PID', how='left')
+    
+    pts2['cent_X'] = pts2['geometry'].x
+    pts2['cent_Y'] = pts2['geometry'].y
+    pts2['ransamp'] = 1
+    
+    ptdf = pd.DataFrame(pts2.drop(columns='geometry'))
+    
+    return(ptdf)
+
+def make_pixel_table_in_db(pixdf, local_db_path, treat_existing):
+    engine = sa.create_engine(local_db_path, echo=False)
+    pixdf.to_sql('pixels', con=engine, if_exists=treat_existing, index = False, dtype={'PID': sa.types.Text(),
+                                                              'Center' : sa.types.Integer(),
+                                                              'cent_lat' : sa.types.Float(precision=6, asdecimal=True),
+                                                              'cent_lon' : sa.types.Float(precision=6, asdecimal=True),
+                                                              'cent_X' : sa.types.Float(precision=2, asdecimal=True), 
+                                                              'cent_Y' : sa.types.Float(precision=2, asdecimal=True),
+                                                              'ransamp' : sa.types.Integer()})
