@@ -18,6 +18,9 @@ from rasterio.plot import show
 import sqlite3
 import sqlalchemy as sa
 import matplotlib.pyplot as plt
+from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey
+from sqlalchemy import MetaData
+from sqlalchemy import create_engine
 
 def get_sample_in_poly(aoi_in, sampsize, subpoly=None):
     '''
@@ -214,11 +217,21 @@ def make_pixel_table(pts_in):
     return(ptdf)
 
 def make_pixel_table_in_db(pixdf, local_db_path, treat_existing):
-    engine = sa.create_engine(local_db_path, echo=False)
-    pixdf.to_sql('pixels', con=engine, if_exists=treat_existing, index = False, dtype={'PID': sa.types.Text(),
-                                                              'Center' : sa.types.Integer(),
-                                                              'cent_lat' : sa.types.Float(precision=6, asdecimal=True),
-                                                              'cent_lon' : sa.types.Float(precision=6, asdecimal=True),
-                                                              'cent_X' : sa.types.Float(precision=2, asdecimal=True), 
-                                                              'cent_Y' : sa.types.Float(precision=2, asdecimal=True),
-                                                              'ransamp' : sa.types.Integer()})
+    '''
+    Creates sql pixel table in database location {local_db_path}
+    Uses sqlite3 connection because this allows for assigmnet of primary key with pandas to_sql
+    '''
+    with sqlite3.connect(local_db_path) as con:
+    
+        pixdf.to_sql('pixels', con=con, schema='public', if_exists=treat_existing, index = False, 
+                 dtype= {
+                    'PID': 'TEXT PRIMARY KEY',
+                    'Center' : 'INTEGER',
+                    'cent_lat' : 'REAL',
+                    'cent_lon' : 'REAL',
+                    'cent_X' : 'REAL', 
+                    'cent_Y' : 'REAL',
+                    'ransamp' : 'INTEGER'
+                 }                
+                ) 
+    con.close()
