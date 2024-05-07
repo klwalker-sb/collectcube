@@ -211,6 +211,9 @@ def make_pixel_table(pts_in):
     pts2['cent_X'] = pts2['geometry'].x
     pts2['cent_Y'] = pts2['geometry'].y
     pts2['ransamp'] = 1
+    pts2['checked'] = 0
+    pts2['PID0'] = pts2.apply(lambda x: int(x['PID'].split('_')[0]), axis=1)
+    pts2['PID1'] = pts2.apply(lambda x: int(x['PID'].split('_')[1]), axis=1)
     
     ptdf = pd.DataFrame(pts2.drop(columns='geometry'))
     
@@ -223,15 +226,18 @@ def make_pixel_table_in_db(pixdf, local_db_path, treat_existing):
     '''
     with sqlite3.connect(local_db_path) as con:
     
-        pixdf.to_sql('pixels', con=con, schema='public', if_exists=treat_existing, index = False, 
+        pixdf.to_sql('pixels', con=con, if_exists=treat_existing, index = False, 
                  dtype= {
                     'PID': 'TEXT PRIMARY KEY',
+                    'PID0': 'INTEGER',
+                    'PID1': 'INTEGER',
                     'Center' : 'INTEGER',
                     'cent_lat' : 'REAL',
                     'cent_lon' : 'REAL',
                     'cent_X' : 'REAL', 
                     'cent_Y' : 'REAL',
-                    'ransamp' : 'INTEGER'
+                    'ransamp' : 'INTEGER',
+                    'checked' : 'INTEGER'
                  }                
                 ) 
     con.close()

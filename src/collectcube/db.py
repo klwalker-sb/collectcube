@@ -22,9 +22,9 @@ def make_LC_table_from_lut(lut, local_db_path, treat_existing):
     Uses sqlite3 connection because this allows for assigmnet of primary key with pandas to_sql
     '''
     if isinstance(lut, pd.DataFrame):
-        lcdf = lut[['LC_UNQ','LC5','LC25','USE_NAME']]
+        lcdf = lut[['LC_UNQ','LC5', 'LC5_name','LC25','USE_NAME']]
     else: 
-        lcdf = pd.read_csv(lc_lut, usecols=['LC_UNQ','LC5','LC25','USE_NAME'])
+        lcdf = pd.read_csv(lut, usecols=['LC_UNQ','LC5','LC5_name','LC25','USE_NAME'])
         
     with sqlite3.connect(local_db_path) as con:
     
@@ -33,6 +33,7 @@ def make_LC_table_from_lut(lut, local_db_path, treat_existing):
                     'LC_UNQ': 'INTEGER PRIMARY KEY',
                     'USE_NAME' : 'TEXT',
                     'LC5' : 'INTEGER',
+                    'LC5_name' : 'TEXT',
                     'LC25' : 'INTEGER'
                  }                
                 ) 
@@ -43,21 +44,39 @@ def make_main_support_tables(engine):
     with engine.connect() as conn:
         pix_table = Table('pixels', metadata, autoload_with=engine)
         lc_table = Table('LC', metadata, autoload_with=engine)
-    
+       
         LC5 = Table('LC5', metadata,
             Column('LC5id', Integer(), primary_key=True),
-            Column('LC5type', Text())
+            Column('LC5type', Text()) 
                   )
               
         PixVar = Table('PixelVerification', metadata,
-            Column('recID', Integer(), primary_key=True),
+            Column('recID', Integer(), primary_key=True, autoincrement=True),
             Column('PID', Text(), ForeignKey(pix_table.c.PID), nullable=False),
-            Column('imgDate', Date(), nullable=False),
-            Column('LC5', Integer(), ForeignKey('LC5.LC5id'), nullable=False),
+            Column('PID0', Integer(), ForeignKey(pix_table.c.PID0), nullable=False),
+            Column('PID1', Integer(), ForeignKey(pix_table.c.PID1), nullable=False),
+            Column('imgDate', Date()),
+            Column('LC5', Integer(), ForeignKey('LC5.LC5id')),
             Column('LC', Integer(), ForeignKey(lc_table.c.LC_UNQ)),
-            Column('HOMONBHD9', Integer(), nullable=False),
+            Column('HOMONBHD9', Integer()),
             Column('ForestProx', Integer()),
             Column('WaterProx', Integer()),
+            Column('PercentTree', Integer()),
+            Column('BUILT', Integer()),
+            Column('BARE', Integer()),
+            Column('WATER', Integer()),
+            Column('CROPMONO', Integer()),
+            Column('CROPMIX', Integer()),
+            Column('LOWVEG', Integer()),
+            Column('DEAD', Integer()),
+            Column('MEDVEG', Integer()),
+            Column('TREEPLANT0', Integer()),
+            Column('HIGHVEG', Integer()),
+            Column('TREEPLANT', Integer()),
+            Column('FOREST', Integer()),
+            Column('Age', Text()),
+            Column('Stability', Text()),
+            Column('State', Text()),
             Column('Notes', Text(255))
                 )
 
@@ -67,6 +86,10 @@ def make_main_support_tables(engine):
 def populate_LC5_table(engine):
     lc5_table = Table('LC5', MetaData(), autoload_with=engine)
     LC5Classes = [
+         { 'LC5id': '0',
+          'LC5type' : ' ------'
+         },
+        
          { 'LC5id': '10',
           'LC5type' : 'NoVeg'
          },
