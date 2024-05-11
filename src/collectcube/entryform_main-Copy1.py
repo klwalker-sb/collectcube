@@ -127,24 +127,34 @@ def open_obs_ui(local_db_path):
             form.addRow(QLabel("Notes (optional)"), self.notes_entry)
             
             self.model = QSqlRelationalTableModel(db=db)
+            ## populate fields for displayed recID
             self.model.setTable('PixelVerification')
+            self.model.setEditStrategy(QSqlTableModel.OnRowChange)
+             
+            ## setting up relations with LC5 and LC tables to that text is seen but ints are stored
             
-            lc5_index = self.model.fieldIndex("LC5") # column of main table in which LC5 variable is stored
-            lc_index = self.model.fieldIndex("LC") # column of main table in which LC variable is stored
+            lc5_index = self.model.fieldIndex("LC5") # cloumn of main table in which LC5 variable is stored
+            lc_index = self.model.fieldIndex("LC") # cloumn of main table in which LC variable is stored
             self.model.setRelation(lc5_index, QSqlRelation('LC5','LC5id','LC5type')) # (table, id to store, value to show)
             self.model.setRelation(lc_index, QSqlRelation('LC','LC_UNQ','USE_NAME')) # (table, id to store, value to show)
+            self.lc_gen_relmodel = self.model.relationModel(lc5_index)
+            self.lc_gen_picker.setModel(self.lc_gen_relmodel)
+            self.lc_gen_picker.setModelColumn(self.lc_gen_relmodel.fieldIndex('LC5type'))
+            self.lc_detail_relmodel = self.model.relationModel(lc_index)
+            self.lc_detail_picker.setModel(self.lc_detail_relmodel)
+            self.lc_detail_picker.setModelColumn(self.lc_detail_relmodel.fieldIndex('USE_NAME'))
+            self.lc_gen_picker.currentIndexChanged.connect(self.update_lc_choices)
             
             self.mapper = QDataWidgetMapper()
             self.mapper.setModel(self.model)
             self.mapper.setItemDelegate(QSqlRelationalDelegate())
-            self.mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
+            #self.mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
             
             self.mapper.addMapping(self.recid_entry, 0)
             self.mapper.addMapping(self.pid_entry, 1)
             self.mapper.addMapping(self.pid0_entry, 2)
             self.mapper.addMapping(self.pid1_entry, 3)
             self.mapper.addMapping(self.imgdate_entry, 4)
-            
             self.mapper.addMapping(self.lc_gen_picker, lc5_index)
             self.mapper.addMapping(self.lc_detail_picker, lc_index)
             self.mapper.addMapping(self.homonbhd9_entry, 7)
@@ -168,25 +178,10 @@ def open_obs_ui(local_db_path):
             self.mapper.addMapping(self.state_entry, 25)
             self.mapper.addMapping(self.notes_entry, 26)
             
-            
-            #self.model.setEditStrategy(QSqlTableModel.OnRowChange)
-            ## setting up relations with LC5 and LC tables to that text is seen but ints are stored
-            
-            ## populate fields for displayed recID
-            #self.mapper.setCurrentIndex(0)
             ## populate model
+            #self.mapper.setCurrentIndex(0)
             self.model.select() 
-            
-            self.lc_gen_relmodel = self.model.relationModel(lc5_index)
-            self.lc_gen_picker.setModel(self.lc_gen_relmodel)
-            self.lc_gen_picker.setModelColumn(self.lc_gen_relmodel.fieldIndex('LC5type'))
-            self.lc_detail_relmodel = self.model.relationModel(lc_index)
-            self.lc_detail_picker.setModel(self.lc_detail_relmodel)
-            self.lc_detail_picker.setModelColumn(self.lc_detail_relmodel.fieldIndex('USE_NAME'))
-            self.lc_gen_picker.currentIndexChanged.connect(self.update_lc_choices)
-            
-            self.mapper.toLast()
-
+            #self.mapper.toLast()
             self.setMinimumSize(QSize(1024, 600))
             
             controls = QHBoxLayout()
@@ -251,16 +246,15 @@ def open_obs_ui(local_db_path):
                 pid0 = id_query.value(1) + 1
             pid = "{}_0".format(pid0)
             add_query = QSqlQuery()
-            add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC)"
-                              "VALUES( ?, ?, ?, ?, ?)")
+            add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1)"
+                              "VALUES( ?, ?, ?)")
             add_query.bindValue(0, pid)
             add_query.bindValue(1, pid0)
             add_query.bindValue(2, 0)
-            add_query.bindValue(3, 0)
-            add_query.bindValue(4, 0)
+            self.model.setQuery(add_query)
             add_query.exec()
             self.mapper.submit()
-            self.model.select() 
+            #self.model.select() 
             self.mapper.toLast()
 
     app = QApplication(sys.argv)
