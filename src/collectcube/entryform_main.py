@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (
     QDateTimeEdit,
     QFormLayout,
     QHBoxLayout,
+    QGridLayout,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -41,56 +42,55 @@ def open_obs_ui(local_db_path):
 
             super().__init__()
             
-            layout = QVBoxLayout()
-            form = QFormLayout()
+            main_layout = QVBoxLayout()
+            main_layout_head1 = QHBoxLayout()
+            main_layout_head1_left = QFormLayout()
             
-            ## redID is the primary key for the table. it autoincrements and is hidden.
-            self.recid_entry = QSpinBox()
-            self.recid_entry.setRange(0, 2147483647)
-            self.recid_entry.setDisabled(True)
-            form.addRow(QLabel("Record:"), self.recid_entry)
+            ## recID is the primary key for the table. it autoincrements and is hidden.
+            self.recid_info = QLineEdit()
+            main_layout_head1_left.addRow(QLabel("rec_id"), self.recid_info)
+            self.recid_info.setDisabled(True)
             
             ## PID is a string primary ID. PID0 and PID1 are int components
             ## TODO: set checked = 1 for pixel with same PID when form is closed (relation table)
-            self.pid_entry = QLineEdit()
-            self.pid_entry.setDisabled(True)
-            form.addRow(QLabel("PID"), self.pid_entry)
+            self.pid_info = QLineEdit()
+            main_layout_head1_left.addRow(QLabel("PID"), self.pid_info)
+            self.recid_info.setDisabled(True)
             
-            ## PID0 is the key for the pixel neighborhood
-            ## TODO: on open, go to first primary key with checked == 0
-            self.pid0_entry = QLineEdit()
-            form.addRow(QLabel("PID0"), self.pid0_entry)
-            
-            ## PID1 = 0 for center pixels
-            ## TODO: neighborhood buttons for other PID1s
-            self.pid1_entry = QLineEdit()
-            form.addRow(QLabel("PID1"), self.pid1_entry)
-            
-            ## TODO: button to copy line for new date (at end of form)
             self.imgdate_entry = QLineEdit()
-            form.addRow(QLabel("obs. date"), self.imgdate_entry)
+            main_layout_head1_left.addRow(QLabel("obs. date"), self.imgdate_entry)
             
+            main_layout_head1.addLayout(main_layout_head1_left)
+            
+            main_layout_head1_right = QVBoxLayout()
+            goto_PID_button = QPushButton("Go to PID")
+            main_layout_head1_right.addWidget(goto_PID_button)
+            #goto_PID_button.clicked.connect(self.mapper.goto_PID)
+            add_pid_button = QPushButton("Add PID")
+            main_layout_head1_right.addWidget(add_pid_button)
+            #add_pid_button.clicked.connect(self.mapper.add_pid)
+            add_date_button = QPushButton("Add date")
+            main_layout_head1_right.addWidget(add_date_button)
+            #add_date_button.clicked.connect(self.mapper.add_date)
+            
+            main_layout_head1.addLayout(main_layout_head1_right)
+            main_layout.addLayout(main_layout_head1)
+           
+            main_layout_head2 = QFormLayout()
             ## linked landcover dropdowns (detailed lc categories shown once LC5 cat is selected): 
             self.lc_gen_picker = QComboBox()
-            form.addRow(QLabel("Main Land cover"), self.lc_gen_picker)
+            main_layout_head2.addRow(QLabel("Main Land cover"), self.lc_gen_picker)
 
             self.lc_detail_picker = QComboBox()
-            form.addRow(QLabel("Land Cover detail"), self.lc_detail_picker) 
-
-            ## TODO: if HOMONBHD9 == 8, grey out neighborhood buttons
-            ## TODO: add button: confirm remaining neighbors are the same (populate neighbor data on click)
-            self.homonbhd9_entry = QSpinBox()
-            self.homonbhd9_entry.setRange(0,8)
-            self.homonbhd9_entry.setValue(8)
-            form.addRow(QLabel("Num neighbors with same LC"), self.homonbhd9_entry)
-            self.forestprox_entry = QLineEdit()
-            form.addRow(QLabel("Proximity to forest edge (optional)"), self.forestprox_entry)
-            self.waterprox_entry = QLineEdit()
-            form.addRow(QLabel("Proximity to watere (optional)"), self.waterprox_entry)
-            self.percenttree_entry = QLineEdit()
-            ## TODO: add image popup with examples
-            form.addRow(QLabel("% TreeCover"), self.percenttree_entry)
+            main_layout_head2.addRow(QLabel("Land Cover detail"), self.lc_detail_picker) 
             
+            main_layout.addLayout(main_layout_head2)
+            
+            mid_layout = QHBoxLayout()
+            #left_layout = QVBoxLayout()
+            form = QFormLayout()
+            
+            main_layout_head1.addLayout(main_layout_head1_left)
             ##TODO: add pure box: if clicked, put 100 in corresponding box & grey out others
             self.built_entry = QLineEdit()
             form.addRow(QLabel("% BUILT"), self.built_entry)
@@ -103,13 +103,13 @@ def open_obs_ui(local_db_path):
             self.cropmix_entry = QLineEdit()
             form.addRow(QLabel("% MIXED CROPS"), self.cropmix_entry)
             self.lowveg_entry = QLineEdit()
-            form.addRow(QLabel("% LOW VEG (grass, etc)"), self.lowveg_entry)
+            form.addRow(QLabel("% Other LOW VEG"), self.lowveg_entry)
             self.dead_entry = QLineEdit()
-            form.addRow(QLabel("% DEAD WOODY (burnt/cut)"), self.dead_entry)
+            form.addRow(QLabel("% DEAD WOODY"), self.dead_entry)
             self.medveg_entry = QLineEdit()
-            form.addRow(QLabel("% MED VEG (shrubs)"), self.medveg_entry)
+            form.addRow(QLabel("% MED VEG"), self.medveg_entry)
             self.treeplant0_entry = QLineEdit()
-            form.addRow(QLabel("% ORCHARD / YOUNG TREE PLANT."), self.treeplant0_entry)
+            form.addRow(QLabel("% ORCHARD"), self.treeplant0_entry)
             self.highveg_entry = QLineEdit()
             form.addRow(QLabel("% TALL WOODY"), self.highveg_entry)
             self.treeplant_entry = QLineEdit()
@@ -123,8 +123,65 @@ def open_obs_ui(local_db_path):
             self.state_entry = QComboBox()
             self.state_entry.addItems(["--","Bare","Young","Mature","Harvest","Burnt","Flooded","Deciduous-partial","Deciduous-full"])
             form.addRow(QLabel("current state"), self.state_entry)
+            
+            self.forestprox_entry = QLineEdit()
+            form.addRow(QLabel("Proximity to forest edge (optional)"), self.forestprox_entry)
+            self.waterprox_entry = QLineEdit()
+            form.addRow(QLabel("Proximity to watere (optional)"), self.waterprox_entry)
+            self.percenttree_entry = QLineEdit()
+            ## TODO: add image popup with examples
+            form.addRow(QLabel("% TreeCover"), self.percenttree_entry)
+            
+            #left_layout.addLayout(form)
+            mid_layout.addLayout(form)
+            
+            right_layout = QVBoxLayout()
+            
+            neighborhood = QGridLayout()
+            neighborhood.setSpacing(3)
+            button_PID1_1 = QPushButton("1")
+            #button_PID1_1.clicked.connect(self.mapper.add_PID1(1))
+            neighborhood.addWidget(button_PID1_1,0,0,1,1)
+            button_PID1_2 = QPushButton("2")
+            #button_PID1_1.clicked.connect(self.mapper.add_PID1(2))
+            neighborhood.addWidget(button_PID1_2,0,1,1,1)
+            button_PID1_3 = QPushButton("3")
+            #button_PID1_1.clicked.connect(self.mapper.add_PID1(3))
+            neighborhood.addWidget(button_PID1_3,0,2,1,1)
+            button_PID1_4 = QPushButton("4")
+            #button_PID1_1.clicked.connect(self.mapper.add_PID1(4))
+            neighborhood.addWidget(button_PID1_4,1,0,1,1)
+            button_PID1_0 = QPushButton("0")
+            neighborhood.addWidget(button_PID1_0,1,1,1,1)
+            button_PID1_5 = QPushButton("5")
+            #button_PID1_1.clicked.connect(self.mapper.add_PID1(5))
+            neighborhood.addWidget(button_PID1_5,1,2,1,1)
+            button_PID1_6 = QPushButton("6")
+            #button_PID1_1.clicked.connect(self.mapper.add_PID1(6))
+            neighborhood.addWidget(button_PID1_6,2,0,1,1)
+            button_PID1_7 = QPushButton("7")
+            #button_PID1_1.clicked.connect(self.mapper.add_PID1(7))
+            neighborhood.addWidget(button_PID1_7,2,1,1,1)
+            button_PID1_8 = QPushButton("8")
+            #button_PID1_1.clicked.connect(self.mapper.add_PID1(8))
+            neighborhood.addWidget(button_PID1_8,2,2,1,1)
+            
+            right_layout.addLayout(neighborhood)
+            
+            self.homonbhd9_entry = QSpinBox()
+            self.homonbhd9_entry.setRange(0,8)
+            self.homonbhd9_entry.setValue(8)
+            #"Num neighbors with same LC"
+            right_layout.addWidget(self.homonbhd9_entry)
+            
+            mid_layout.addLayout(right_layout)
+            
+            main_layout.addLayout(mid_layout)
+            main_layout_foot = QFormLayout()
+            
             self.notes_entry = QLineEdit()
-            form.addRow(QLabel("Notes (optional)"), self.notes_entry)
+            main_layout_foot.addRow(QLabel("Notes (optional)"), self.notes_entry)
+            main_layout.addLayout(main_layout_foot)
             
             self.model = QSqlRelationalTableModel(db=db)
             self.model.setTable('PixelVerification')
@@ -139,10 +196,10 @@ def open_obs_ui(local_db_path):
             self.mapper.setItemDelegate(QSqlRelationalDelegate())
             self.mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
             
-            self.mapper.addMapping(self.recid_entry, 0)
-            self.mapper.addMapping(self.pid_entry, 1)
-            self.mapper.addMapping(self.pid0_entry, 2)
-            self.mapper.addMapping(self.pid1_entry, 3)
+            self.mapper.addMapping(self.recid_info, 0)
+            self.mapper.addMapping(self.pid_info, 1)
+            #self.mapper.addMapping(self.pid0_entry, 2)
+            #self.mapper.addMapping(self.pid1_entry, 3)
             self.mapper.addMapping(self.imgdate_entry, 4)
             
             self.mapper.addMapping(self.lc_gen_picker, lc5_index)
@@ -204,11 +261,11 @@ def open_obs_ui(local_db_path):
             controls.addWidget(next_pix)
             controls.addWidget(save_rec)
             
-            layout.addLayout(form)
-            layout.addLayout(controls)
+            #layout.addLayout(form)
+            main_layout.addLayout(controls)
             
             widget = QWidget()
-            widget.setLayout(layout)
+            widget.setLayout(main_layout)
             self.setCentralWidget(widget)
             
         #def initializeUI(self):
