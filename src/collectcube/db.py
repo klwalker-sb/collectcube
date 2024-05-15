@@ -67,6 +67,7 @@ def make_main_support_tables(engine):
             Column('WATER', Integer()),
             Column('CROPMONO', Integer()),
             Column('CROPMIX', Integer()),
+            Column('CROPMED', Integer()),
             Column('LOWVEG', Integer()),
             Column('DEAD', Integer()),
             Column('MEDVEG', Integer()),
