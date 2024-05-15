@@ -13,29 +13,27 @@ Within-pixel heterogeneity can also be recorded for the same goals as above and 
 
 ## Example of CollectCube data input form and process:
 
-1) Data is entered for center pixel    | 2) Date is copied and modified for diverging pixels | 3) Center pixel data is then copied to all remaining neighbors.
-:-------------------------:|:-------------------------:|::-------------------------:
-![](images/CollectCube_formExamp1.png) | ![](images/CollectCube_formExamp2.png) | ![](images/CollectCube_formExamp3.png)
-
-4) This whole grid is then copied for a new date | Changes can then be made to cells where they occured |
-:-------------------------:|:-------------------------:|::-------------------------:
-![](images/CollectCube_formExamp5.png) |  |
+|1) Data is entered for the center pixel    | 2) Date is copied and modified for diverging pixels | 3) Center pixel data is then copied to all remaining neighbors.|
+|-------------------------|------------------------|-------------------------|
+| <img src="images/CollectCube_formExamp1.png" width="400" />| <img src="images/CollectCube_formExamp2.png" width="300" /> | <img src="images/CollectCube_formExamp3.png" width="300" />|
+|4) This whole grid is then copied for a new date | Changes can then be made to cells where they occured | | |
+|<img src="images/CollectCube_formExamp5.png" width="300" /> |  |  |
 
 ## sample creation 
 
 ### Generate random sample
+
 sample within subpolygon   | or across full AOI
 :-------------------------:|:-------------------------:
 ![](images/sample_pts1.png)  |  ![](images/sample_pts2.png) 
 
 ### Shift sample points to centroids of reference grid
-![](images/shift_sample_pts.png)
+<img src="images/shift_sample_pts.png" width="300" />
 
-### Populate neighbor pixels for contextual information
-![](images/sample_neighborhood.png)
-
+### Populating neighbor pixels for contextual information
+<img src="images/sample_neighborhood.png" width="300" />
 
 ## setup for database creation / editing
- -> conda create --name venv.collect_sql python=3.8
- -> conda activate venv.collect_sql
- -> conda install sqlalchemy pyqt5
+* conda create --name venv.collect_sql python=3.8
+* conda activate venv.collect_sql
+* conda install sqlalchemy pyqt5
