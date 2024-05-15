@@ -65,7 +65,7 @@ def open_obs_ui(local_db_path):
             main_layout_head1 = QHBoxLayout()
             main_layout_head1_left = QFormLayout()
             
-            bigfont = QFont('Times', 14)
+            bigfont = QFont('Times', 13)
             
             ## recID is the primary key for the table. it autoincrements and is hidden.
             self.recid_info = QLineEdit()
@@ -124,7 +124,7 @@ def open_obs_ui(local_db_path):
             mid_layout = QHBoxLayout()
             #left_layout = QVBoxLayout()
             form = QFormLayout()
-            form.setContentsMargins(60,60,-1,-1)
+            form.setContentsMargins(0,0,-1,-1)
             
             main_layout_head1.addLayout(main_layout_head1_left)
             ##TODO: add pure box: if clicked, put 100 in corresponding box & grey out others
@@ -205,7 +205,7 @@ def open_obs_ui(local_db_path):
             self.homonbhd9_entry.setRange(0,8)
             self.homonbhd9_entry.setValue(8)
             self.homonbhd9_entry.setStyleSheet("QSpinBox{background-color:lightyellow}")
-            self.homonbhd9_label = QLabel("Num neighbors with same LC: (note: only forcenter pixel)")
+            self.homonbhd9_label = QLabel("Num neighbors with same LC: (only for center pix)")
             self.homonbhd9_label.setGeometry(60, 30, 100, 50) 
             self.homonbhd9_label.setWordWrap(True) 
             
@@ -564,7 +564,7 @@ def open_obs_ui(local_db_path):
                     this_rec_id = self.recid_info.text()
                     this_pid = self.pid_info.text()
                     this_date = self.imgdate_entry.text()
-                    next_rec = self.model.rowCount()
+                    next_rec = self.model.rowCount()+1
                     #print('next record id = {}'.format(next_rec))
                     pid0 = this_pid.split('_')[0]
                     for i in range(9):
@@ -618,7 +618,7 @@ def open_obs_ui(local_db_path):
                 print('copying record for neighbor {}'.format(this_neighbor))
                 this_rec_id = self.recid_info.text()
                 this_pid = self.pid_info.text()
-                next_rec = self.model.rowCount()
+                next_rec = self.model.rowCount()+1
                 this_date = self.imgdate_entry.text()
                 cpy_qry = QSqlQuery("CREATE TABLE tempTable AS SELECT * FROM PixelVerification WHERE PID=? AND imgDate=?")
                 cpy_qry.bindValue(0,this_pid)
@@ -676,7 +676,7 @@ def open_obs_ui(local_db_path):
                 this_pid = self.pid_info.text()
                 this_pid0 = self.pid_info.text().split('_')[0]
                 cent_pid = f'{this_pid0}_0'
-                next_rec = self.model.rowCount()
+                next_rec = self.model.rowCount()+1
                 this_date = self.imgdate_entry.text()
                 self.get_neighborhood_info()
                 changed_pid1s = [k.split('_')[1] for k in self.changed_neighbors]

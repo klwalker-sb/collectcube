@@ -15,4 +15,4 @@ sample within subpolygon   | or across full AOI
 ## setup for database creation / editing
 conda create --name venv.collect_sql python=3.8
 conda activate venv.collect_sql
-conda install sqlalchemy pyqt6
+conda install sqlalchemy pyqt5
