@@ -15,16 +15,16 @@ LC_UNQ,USE_NAME,LC5_name,LC5,LC25,LC25_name,LC3,LC3_name,LC4,LC4_name,LC2,LC2_na
 19,Mixed-FieldEdge,LowVeg,20,19,Mixed-VegEdge,0,nocrop,0,nocrop,0,nocrop,10,Not crop,Mix of Crop_low and other low/med veg at edge of field
 20,LowVeg,LowVeg,20,99,unknown,0,nocrop,0,nocrop,0,nocrop,10,Not crop,
 23,Crops-horticulture,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,23,Horticulture,crops with greenhouse/tarp structure for part of year
-30,Crop-Low,LowVeg,20,99,unknown,1,crop,1,crop,1,crop,10,Crops-unknown,unknown annual crop
+30,L_Crop-Low,LowVeg,20,99,unknown,1,crop,1,crop,1,crop,10,Crops-unknown,unknown annual crop
 31,Crops-Soybeans,LowVeg,20,31,Crops-Soybeans,1,crop,1,crop,1,crop,31,Soybeans,
 32,Crops-Beans,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,
 33,Crops-Corn,LowVeg,20,33,Crops-Corn,1,crop,1,crop,1,crop,33,Corn,
 34,Crops-Mandioca,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,
-35,Crops-mix,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,intercropping with each crop <30m across
+35,M_Crops-mix,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,intercropping with each crop <30m across
 36,Crops-Peanuts,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,
 37,Crops-Rice,LowVeg,20,37,Crops-Rice,1,crop,1,crop,1,crop,37,Rice,
 38,Crops-Sugar,LowVeg,20,38,Crops-Sugar,1,crop,1,crop,1,crop,38,Sugar,
-40,Crop_Med,MedVeg,40,99,unknown,2,medcrop,2,medcrop,1,crop,40,Shrub crops,unknown or other shrubby perrenial crops (i.e. vineyards)
+40,D_Crop_Med,MedVeg,40,99,unknown,2,medcrop,2,medcrop,1,crop,40,Shrub crops,unknown or other shrubby perrenial crops (i.e. vineyards)
 41,Crops-Vineyard,MedVeg,40,41,Crops-Vineyard,2,medcrop,2,medcrop,1,crop,40,Shrub crops,
 42,Crops-Yerba-Mate,MedVeg,40,42,Crops-Yerba-Mate,2,medcrop,2,medcrop,1,crop,40,Shrub crops,
 43,Crops-Banana,MedVeg,40,43,Crops-Banana,2,medcrop,2,medcrop,1,crop,40,Shrub crops,
@@ -42,3 +42,4 @@ LC_UNQ,USE_NAME,LC5_name,LC5,LC25,LC25_name,LC3,LC3_name,LC4,LC4_name,LC2,LC2_na
 70,Trees-Wetland,Trees,70,70,Trees-Wetland,0,nocrop,3,tree,0,nocrop,10,Not crop,Mangrove
 80,Trees-Forest,Trees,70,80,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,">90% canopy closure of trees with large, heterogenous crowns"
 99,unknown,unknown,99,99,unknown,99,unknown,99,unknown,99,unknown,99,unknown,no idea -- this is a placeholder for data checking and should be removed for all classification
+98,N_NoCrop,unknown,99,98,NoCrop,0,nocrop,0,nocrop,0,nocrop,98,Not crop,for simple data checking exercises where only crop/noCrop is needed

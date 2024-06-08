@@ -23,6 +23,7 @@ from PyQt5.QtWidgets import (
     QGridLayout,
     QLabel,
     QLineEdit,
+    QCheckBox,
     QMainWindow,
     QPushButton,
     QVBoxLayout,
@@ -92,7 +93,7 @@ def open_obs_ui(local_db_path):
             goto_pid_button.clicked.connect(self.goto_pid)
             add_pid_button = QPushButton("Add PID")
             main_layout_head1_right.addWidget(add_pid_button)
-            #add_pid_button.clicked.connect(self.add_pid)
+            add_pid_button.clicked.connect(self.add_pid)
             
             main_layout_head1.addLayout(main_layout_head1_right)
             main_layout.addLayout(main_layout_head1)
@@ -127,7 +128,19 @@ def open_obs_ui(local_db_path):
             form.setContentsMargins(0,0,-1,-1)
             
             main_layout_head1.addLayout(main_layout_head1_left)
-            ##TODO: add pure box: if clicked, put 100 in corresponding box & grey out others
+            
+            self.withinpix_homo = QCheckBox()
+            self.withinpix_homo_lab = QLabel("Include WITHIN Pix homogeneity?") 
+            form.addRow(self.withinpix_homo_lab, self.withinpix_homo)  
+            self.withinpix_homo_lab.setFont(QFont("Times",weight=QFont.Bold))
+            self.withinpix_homo.setCheckState(Qt.Checked)
+            self.withinpix_homo.stateChanged.connect(self.inlude_exclude_withinpix_info)
+            
+            self.purepix = QCheckBox()
+            form.addRow(QLabel("Pixel contains single land cover"),  self.purepix)            
+            self.purepix.setCheckState(0)
+            self.purepix.stateChanged.connect(self.populate_pure_percentage)
+            
             self.built_entry = QLineEdit()
             form.addRow(QLabel("% BUILT"), self.built_entry)
             self.bare_entry = QLineEdit()
@@ -137,33 +150,25 @@ def open_obs_ui(local_db_path):
             self.cropmono_entry = QLineEdit()
             form.addRow(QLabel("% MONO CROP LOW"), self.cropmono_entry)
             self.cropmix_entry = QLineEdit()
-            form.addRow(QLabel("% MIXED CROPS"), self.cropmix_entry)
-            self.lowveg_entry = QLineEdit()
+            form.addRow(QLabel("% MIXED CROP"), self.cropmix_entry)
             self.cropmed_entry = QLineEdit()
-            form.addRow(QLabel("% MED CROPS"), self.cropmed_entry)
-            self.lowveg_entry = QLineEdit()
-            form.addRow(QLabel("% Other LOW VEG"), self.lowveg_entry)
+            form.addRow(QLabel("% MED CROP"), self.cropmed_entry)
+            self.grass_entry = QLineEdit()
+            form.addRow(QLabel("% GRASS"), self.grass_entry)
             self.dead_entry = QLineEdit()
             form.addRow(QLabel("% DEAD WOODY"), self.dead_entry)
             self.medveg_entry = QLineEdit()
             form.addRow(QLabel("% MED VEG"), self.medveg_entry)
-            self.treeplant0_entry = QLineEdit()
-            form.addRow(QLabel("% ORCHARD"), self.treeplant0_entry)
             self.highveg_entry = QLineEdit()
             form.addRow(QLabel("% TALL WOODY"), self.highveg_entry)
+            self.treeplant0_entry = QLineEdit()
+            form.addRow(QLabel("% YOUNG TREE PLANT(0-2yrs)"), self.treeplant0_entry)
             self.treeplant_entry = QLineEdit()
-            form.addRow(QLabel("% TREE PLANTATION"), self.treeplant_entry)
+            form.addRow(QLabel("% MATURE TREE PLANT"), self.treeplant_entry)
             self.forest_entry= QLineEdit()
-            form.addRow(QLabel("% FOREST"), self.forest_entry)
+            form.addRow(QLabel("% FOREST/TREES"), self.forest_entry)
             self.age_entry=QLineEdit()
             form.addRow(QLabel("Estimated Age"), self.age_entry)
-            self.stability_entry = QComboBox()
-            self.stability_entry.addItems(["--","c - true change", "s - stable", "of - seasonal fluc.", 
-                                     "rf - regular fluc. (tides)", "pi - positional instability"])
-            form.addRow(QLabel("stability note"), self.stability_entry)
-            self.state_entry = QComboBox()
-            self.state_entry.addItems(["--","Bare","Young","Mature","Harvest","Burnt","Flooded","Deciduous-partial","Deciduous-full"])
-            form.addRow(QLabel("current state"), self.state_entry)
             
             self.forestprox_entry = QLineEdit()
             form.addRow(QLabel("Proximity to forest edge"), self.forestprox_entry)
@@ -181,6 +186,15 @@ def open_obs_ui(local_db_path):
             right_layout = QVBoxLayout()
             right_layout.setContentsMargins(0,-1,100,0)
             
+            self.neighborhood_homo = QCheckBox() 
+            self.neighborhood_homo.setCheckState(Qt.Checked)
+            self.neighborhood_homo.stateChanged.connect(self.inlude_exclude_neighborhood_info)
+            self.neighborhood_label = QLabel("Include NEIGHBORHOOD homogeneity?",  self.neighborhood_homo)   
+            self.neighborhood_label.setFont(QFont("Times",weight=QFont.Bold))
+            
+            right_layout.addWidget(self.neighborhood_label)
+            right_layout.addWidget(self.neighborhood_homo)
+            
             placement_dict = {0:[1,1,1,1],1:[0,0,1,1],2:[0,1,1,1],3:[0,2,1,1],4:[1,0,1,1],
                               5:[1,2,1,1],6:[2,0,1,1],7:[2,1,1,1],8:[2,2,1,1]}
             neighborhood = QGridLayout()
@@ -194,7 +208,7 @@ def open_obs_ui(local_db_path):
                 v = placement_dict[i]
                 neighborhood.addWidget(self.neighbors[f'neighbor_{i}'],int(v[0]),int(v[1]),int(v[2]),int(v[3]))             
                 self.neighbors[f'neighbor_{i}'].clicked.connect(self.add_neighbor)
-            
+              
             blanklabel0 = QLabel("   ")
             right_layout.addWidget(blanklabel0)
             blanklabel1 = QLabel("   ")
@@ -211,7 +225,6 @@ def open_obs_ui(local_db_path):
             
             right_layout.addWidget(self.homonbhd9_label)
             right_layout.addWidget(self.homonbhd9_entry)
-            
             
             self.submit_neighbors_label = QLabel(
                 "If all white boxes are the same lc as the center, click button below")
@@ -234,6 +247,13 @@ def open_obs_ui(local_db_path):
             main_layout.addLayout(mid_layout)
             main_layout_foot = QFormLayout()
             
+            self.stability_entry = QComboBox()
+            self.stability_entry.addItems(["--","c - true change", "s - stable", "of - seasonal fluc.", 
+                                     "rf - regular fluc. (tides)", "pi - positional instability"])
+            main_layout_foot.addRow(QLabel("stability note"), self.stability_entry)
+            self.state_entry = QComboBox()
+            self.state_entry.addItems(["--","Bare","Young","Mature","Harvest","Burnt","Flooded","Deciduous-partial","Deciduous-full"])
+            main_layout_foot.addRow(QLabel("current state"), self.state_entry)
             self.notes_entry = QLineEdit()
             main_layout_foot.addRow(QLabel("Notes"), self.notes_entry)
             main_layout.addLayout(main_layout_foot)
@@ -241,13 +261,25 @@ def open_obs_ui(local_db_path):
             self.model = QSqlRelationalTableModel(db=db)
             self.model.setTable('PixelVerification')
             
-            lc5_index = self.model.fieldIndex("LC5") # column of main table in which LC5 variable is stored
-            lc_index = self.model.fieldIndex("LC") # column of main table in which LC variable is stored
-            self.model.setRelation(lc5_index, QSqlRelation('LC5','LC5id','LC5type')) # (table, id to store, value to show)
-            self.model.setRelation(lc_index, QSqlRelation('LC','LC_UNQ','USE_NAME')) # (table, id to store, value to show)
+            ## setting up relations with LC5 and LC tables so that text is seen but ints are stored
+            lc5_col = self.model.fieldIndex('LC5') # column of main table in which LC5 variable is stored
+            self.model.setRelation(lc5_col, QSqlRelation('LC5','LC5id','LC5type')) # (table, id to store, value to show)
+            self.lc_gen_relmodel = self.model.relationModel(lc5_col)
+            self.lc_gen_picker.setModel(self.lc_gen_relmodel)
+            self.lc_gen_picker.setModelColumn(self.lc_gen_relmodel.fieldIndex('LC5type'))
+            self.lc_gen_picker.activated.connect(self.update_lc_choices)
             
+            lc_col = self.model.fieldIndex('LC') # column of main table in which LC variable is stored 
+            self.model.setRelation(lc_col, QSqlRelation('LC','LC_UNQ','USE_NAME'))  # (table, id to store, value to show)
+            self.lc_detail_relmodel = self.model.relationModel(lc_col)
+            self.lc_detail_picker.setModel(self.lc_detail_relmodel)
+            self.lc_detail_picker.setModelColumn(self.lc_detail_relmodel.fieldIndex('USE_NAME'))
+            self.lc_detail_picker.activated.connect(self.update_lc5_choices)
+                  
+            #self.model.setEditStrategy(QSqlRelationalTableModel.OnManualSubmit)
             self.mapper = QDataWidgetMapper()
             self.mapper.setModel(self.model)
+            # ItemDelegate needs to be set to save selections in Comboboxes (as they are populated with relational models)
             self.mapper.setItemDelegate(QSqlRelationalDelegate())
             self.mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
             
@@ -257,8 +289,8 @@ def open_obs_ui(local_db_path):
             #self.mapper.addMapping(self.pid1_entry, 3)
             self.mapper.addMapping(self.imgdate_entry, 4)
             
-            self.mapper.addMapping(self.lc_gen_picker, lc5_index)
-            self.mapper.addMapping(self.lc_detail_picker, lc_index)
+            self.mapper.addMapping(self.lc_gen_picker, lc5_col)
+            self.mapper.addMapping(self.lc_detail_picker, lc_col)
             self.mapper.addMapping(self.homonbhd9_entry, 7)
             self.mapper.addMapping(self.forestprox_entry, 8)
             self.mapper.addMapping(self.waterprox_entry, 9)
@@ -269,7 +301,7 @@ def open_obs_ui(local_db_path):
             self.mapper.addMapping(self.cropmono_entry, 14)
             self.mapper.addMapping(self.cropmix_entry, 15)
             self.mapper.addMapping(self.cropmed_entry, 16)
-            self.mapper.addMapping(self.lowveg_entry, 17)
+            self.mapper.addMapping(self.grass_entry, 17)
             self.mapper.addMapping(self.dead_entry, 18)
             self.mapper.addMapping(self.medveg_entry, 19)
             self.mapper.addMapping(self.treeplant0_entry, 20)
@@ -281,18 +313,7 @@ def open_obs_ui(local_db_path):
             self.mapper.addMapping(self.state_entry, 26)
             self.mapper.addMapping(self.notes_entry, 27)
             
-            self.model.select() 
-            
-            ## setting up relations with LC5 and LC tables to that text is seen but ints are stored
-
-            self.lc_gen_relmodel = self.model.relationModel(lc5_index)
-            self.lc_gen_picker.setModel(self.lc_gen_relmodel)
-            self.lc_gen_picker.setModelColumn(self.lc_gen_relmodel.fieldIndex('LC5type'))
-            self.lc_detail_relmodel = self.model.relationModel(lc_index)
-            self.lc_detail_picker.setModel(self.lc_detail_relmodel)
-            self.lc_detail_picker.setModelColumn(self.lc_detail_relmodel.fieldIndex('USE_NAME'))
-            self.lc_gen_picker.currentIndexChanged.connect(self.update_lc_choices)
-            
+            self.model.select()
             self.mapper.toLast()
 
             self.setMinimumSize(QSize(250, 600))
@@ -300,9 +321,9 @@ def open_obs_ui(local_db_path):
             controls = QHBoxLayout()
   
             prev_rec = QPushButton("<")
-            prev_rec.clicked.connect(self.mapper.toPrevious)
+            prev_rec.clicked.connect(self.get_prev_rec)
             next_rec = QPushButton(">")
-            next_rec.clicked.connect(self.mapper.toNext)
+            next_rec.clicked.connect(self.get_next_rec)
             next_pix = QPushButton("next_pix")
             next_pix.clicked.connect(self.get_next_pix)
             save_rec = QPushButton("Save Changes")
@@ -323,10 +344,22 @@ def open_obs_ui(local_db_path):
             
             
         #def initializeUI(self):
+        def reset_filters(self):
+            self.lc_detail_relmodel.setFilter("")
+            self.lc_gen_relmodel.setFilter("")
+            
+        def get_next_rec(self):
+            self.reset_filters()
+            self.mapper.toNext()
+            
+        def get_prev_rec(self):
+            self.reset_filters()
+            self.mapper.toPrevious()
+            
         def validate_date(self):
             passing = True
             date_entry = self.imgdate_entry.text()
-            print('checking date entry: {}'.format(date_entry))
+            #print('checking date entry: {}'.format(date_entry))
             try:
                 day = date_entry.split('-')[2]
                 mo = date_entry.split('-')[1]
@@ -347,9 +380,8 @@ def open_obs_ui(local_db_path):
                 msg.exec_()
                 return False
             else:
-                print('formatting ok')
+                #print('formatting ok')
                 return True
-        
         
         def get_neighborhood_info(self):
             this_pid = self.pid_info.text()
@@ -363,7 +395,6 @@ def open_obs_ui(local_db_path):
             while pid_qry.next():    
                 self.changed_neighbors.append(pid_qry.value(0))
         
-        
         def color_neighborhood(self):
             ## Color cells that have been done in neighborhood for same pid0 and date:
             for n, o in self.neighbors.items():
@@ -376,8 +407,7 @@ def open_obs_ui(local_db_path):
                     o.set_color('gray')
                 if n.split('_')[1] == self.pid_info.text().split('_')[1]:
                     o.set_color('yellow')
-            
-            
+                   
         def update_record(self):
             ## This just saves edits. Does not copy or move on from record, so no data checks yet.
             self.mapper.submit()
@@ -392,29 +422,98 @@ def open_obs_ui(local_db_path):
             add_fields.bindValue(2, this_pid.split('_')[1])
             add_fields.exec()
             self.mapper.submit()
-            
+            #self.lc_detail_relmodel.setFilter("")
+            #self.lc_gen_relmodel.setFilter("")
         
-        def goto_pid(self):
+        def new_pid(self,pid,dt=None):
+            if '_' in pid:
+                pidx = pid
+                pid0 = pid.split('_')[0]
+                pid1 = pid.split('_')[1]
+            else:
+                pid0 = pid
+                pid1 = 0
+                pidx = f'{pid0}_0'
+
+                add_query = QSqlQuery()
+                
+                if dt: 
+                    add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC, imgDate)"
+                          "VALUES( ?, ?, ?, ?, ?, ?)")
+                    add_query.bindValue(5, dt)
+                else:
+                    add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC)"
+                          "VALUES( ?, ?, ?, ?, ?)")
+                    
+                add_query.bindValue(0, pidx)
+                add_query.bindValue(1, pid0)
+                add_query.bindValue(2, pid1)
+                add_query.bindValue(3, 0)
+                add_query.bindValue(4, 0)
+                add_query.exec()
+                self.mapper.submit()
+                self.model.select() 
+                self.mapper.toLast()
+                self.color_neighborhood()
+        
+        def add_pid(self):
+            '''
+            To implement add_pid directly via button
+            '''
             # pid can either be entered as single number(pid0) or as full pid(pid0_pid1)
             text, ok = QInputDialog().getText(self, "PID chooser",
                                      "PID:", QLineEdit.Normal)
             if ok and text:
+                self.new_pid(text)  
+                
+        def goto_record(self,pid,dt=None):
+            #print(pid)
+            # pid is a string, either entered as a single number(pid0) or as full pid(pid0_pid1)
+            if dt:
+                pid_qry = QSqlQuery("SELECT * from PixelVerification where PID = ? AND imgDate=?")
+                pid_qry.bindValue(1, dt)
+            else:
                 pid_qry = QSqlQuery("SELECT * from PixelVerification where PID = ?")
-                if '_' in text:
-                    pid_qry.bindValue(0, text)
+                
+            if '_' in pid:
+                pid_qry.bindValue(0, pid)
+            else:
+                pid0 = pid
+                pid_qry.bindValue(0, f'{pid0}_0')
+                
+            pid_qry.exec()
+            pidmodel = QSqlQueryModel(self)
+            pidmodel.setQuery(pid_qry)
+            rec = pidmodel.record(0).value(0)
+            if rec==None: 
+                buttonReply = QMessageBox.question(
+                    self, "RECORD DOES NOT EXIST", "Do you want to create new record?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                #buttonReply.setIcon(QMessageBox.Warning)  #cannot set icon on standatd button object
+                
+                if buttonReply == QMessageBox.Yes:
+                    self.new_pid(pid,dt)
+                    return True
                 else:
-                    pid0 = int(text)
-                    pid_qry.bindValue(0, f'{pid0}_0')
-                pid_qry.exec()
-                pidmodel = QSqlQueryModel(self)
-                pidmodel.setQuery(pid_qry)
-                rec = pidmodel.record(0).value(0)
-                #print('rec:{}'.format(rec))
+                    return False
+            
+            else:
+                #print(f'going to rec:{rec}')
                 self.model.select()
-                self.mapper.setCurrentIndex(rec)
+                self.reset_filters()
+                self.mapper.setCurrentIndex(rec-1)
                 self.color_neighborhood()
-            
-            
+                
+        def goto_pid(self):
+            '''
+            To implement goto_record directly via button
+            '''
+            # pid can either be entered as single number(pid0) or as full pid(pid0_pid1)
+            text, ok = QInputDialog().getText(self, "PID chooser",
+                                     "PID:", QLineEdit.Normal)
+            if ok and text:
+                self.goto_record(text)  
+                      
         def check_data(self):
             # check date formatting:
             valid_date = self.validate_date()
@@ -426,7 +525,7 @@ def open_obs_ui(local_db_path):
                 #print('pid:{}'.format(this_pid))
                 this_lc = self.lc_detail_picker.currentText()
                 #print('lc:{}'.format(this_lc))
-                this_lc5 = self.lc_gen_picker.currentIndex()
+                this_lc5 = self.lc_gen_picker.currentText()
                 #print('lc5:{}'.format(this_lc5))
                 
                 if this_pid =='' or this_lc=='' or this_lc5==0:
@@ -438,7 +537,7 @@ def open_obs_ui(local_db_path):
                 
                     return False
             
-                else:
+                elif self.withinpix_homo.isChecked() == True:
                     ## Check if Land cover %s sum to 100:
                     per_built = self.built_entry.text()
                     per_bare = self.bare_entry.text()
@@ -446,7 +545,7 @@ def open_obs_ui(local_db_path):
                     per_cropm = self.cropmono_entry.text()
                     per_cropmix = self.cropmix_entry.text()
                     per_cropmed = self.cropmed_entry.text()
-                    per_lowveg = self.lowveg_entry.text()
+                    per_grass = self.grass_entry.text()
                     per_dead = self.dead_entry.text()
                     per_medveg = self.medveg_entry.text()
                     per_treeplant0 = self.treeplant0_entry.text()
@@ -454,13 +553,14 @@ def open_obs_ui(local_db_path):
                     per_treeplant = self.treeplant_entry.text()
                     per_forest = self.forest_entry.text()
                 
-                    lcs = [per_built,  per_bare, per_water, per_cropm, per_cropmix, per_cropmed, per_lowveg, 
-                           per_dead, per_medveg, per_treeplant0, per_highveg, per_treeplant, per_forest]
+                    lcs = [per_built,  per_bare, per_water, per_cropm, per_cropmix, per_cropmed, per_grass, 
+                       per_dead, per_medveg, per_treeplant0, per_highveg, per_treeplant, per_forest]
                     areas = []
                     for r, lc in enumerate(lcs):
                         if lc != '':
                             areas.append(int(lc))
                     cum_area = sum(areas)
+                    
                     if cum_area != 100:
                         msg = QMessageBox()
                         msg.setWindowTitle("ADDITION FAILURE")
@@ -472,41 +572,94 @@ def open_obs_ui(local_db_path):
                 
                     else:
                         return True
+                else:
+                    return True
         
         @QtCore.pyqtSlot(int)
+
+        def inlude_exclude_withinpix_info(self):
+            if self.withinpix_homo.isChecked() == False:
+                print(f'box is unchecked')
+        
+        def inlude_exclude_neighborhood_info(self):
+            if self.neighborhood_homo.isChecked() == False:
+                print(f'box is unchecked')
+        
+        def update_lc_selection(self):
+            ## Not working
+            self.lc_detail_picker.blockSignals(True)
+            self.lc_detail_relmodel.setFilter("")
+            self.lc_detail_picker.blockSignals(False)
+            #self.lc_detail_picker.setCurrentIndex(0)
+            
         def update_lc_choices(self, i):
-            #lc_code = self.lc5_relmodel.data(i,1)
-            #print('pk is:{}'.format(pk))
-            ## using display text instead of primary key for now. TODO: get above to work to use pk. 
-            val = self.lc_gen_picker.itemText(i)
-            query = QSqlQuery("SELECT * from LC where LC5_name = ?")
-            query.addBindValue(val)
-            query.exec_()
-            self.model_lc_codes = QSqlQueryModel(self)
-            self.model_lc_codes.setQuery(query)
-            self.lc_detail_picker.setModel(self.model_lc_codes)
-            ## reset index for future edits:
-            self.lc_detail_picker.setCurrentIndex(0)  
-    
+            self.lc_detail_relmodel.setFilter ("LC5_name like'" +self.lc_gen_picker.itemText(i)+ "%%'")
+            
+        def update_lc5_choices(self, i):
+            lc = self.lc_detail_picker.itemText(i)
+            lc = str(self.lc_detail_picker.currentText())
+            lc5_qry = QSqlQuery()
+            lc5_qry.prepare("SELECT USE_NAME, LC5_name from LC WHERE USE_NAME=?")
+            lc5_qry.bindValue(0,lc)
+            lc5_qry.exec()
+            lc5_qry.next()
+            lc5 = lc5_qry.value(1)
+            self.lc_gen_relmodel.setFilter("LC5type like'" +lc5+ "%%'")
+        
+        def populate_pure_percentage(self):
+            '''
+            enter 100 in corresponding field if pixel is marked as pure
+            '''
+            if self.purepix.isChecked() == True:
+                lc = str(self.lc_detail_picker.currentText())
+                if lc == 'NoVeg_Bare':
+                    self.bare_entry.setText('100')
+                elif lc == 'NoVeg_Built':
+                    self.built_entry.setText('100')
+                elif lc == 'NoVeg_Water':
+                    self.water_entry.setText('100')
+                elif lc.startswith('Grass'):
+                    self.grass.entry.setText('100')
+                elif lc.startswith('Crops-Orchard') or lc in ['Crops-Banana','Crops-Yerba-Mate','Crops-Vineyard','D_Crop_Med']:
+                    self.cropmed_entry.setText('100')
+                elif lc == 'M_Crops-mix':
+                    self.cropmix_entry.setText('100')
+                elif lc.startswith('Crop') or lc == 'L_Crop-Low':    
+                    self.cropmono_entry.setText('100')
+                elif lc == 'TreePlant-new':
+                    self.treeplant0_entry.setText('100')
+                elif lc.startswith('TreePlant'):
+                    self.treeplant_entry.setText('100')
+                elif lc.startswith('Tree'):
+                    self.forest_entry.setText('100')
+                elif lc in ['Cleared','Burnt-woody']:
+                    self.dead_entry.setText('100')
+                elif lc in ['Shrub','Grass_tree-mix']:
+                    self.medveg_entry.setText('100')
+                elif lc == 'HighVeg':
+                    self.highveg_entry.setText('100')
+             
         def get_next_pix(self):
             ## Save current row
             self.update_record()
             if self.check_data() == False:
                 return False
             else:
-                self.get_neighborhood_info
-                if len(self.changed_neighbors) < 9:
-                    print(len(self.changed_neighbors))
-                    msg = QMessageBox()
-                    msg.setWindowTitle("MISSING NEIGHBORS")
-                    msg.setIcon(QMessageBox.Warning)
-                    msg.setText("click on cells that are different or submit neighborhood (to copy/paste)")
-                    msg.exec_()
-                    return False
+                if self.neighborhood_homo.isChecked() == True:
+                    self.get_neighborhood_info
+                    if len(self.changed_neighbors) < 9:
+                        print(len(self.changed_neighbors))
+                        msg = QMessageBox()
+                        msg.setWindowTitle("MISSING NEIGHBORS")
+                        msg.setIcon(QMessageBox.Warning)
+                        msg.setText("click on cells that are different or submit neighborhood (to copy/paste)")
+                        msg.exec_()
+                        
+                        return False
                     
                 else:      
                     last_row = self.model.rowCount()
-                    #print('there are {} records'.format(last_row))
+                    #print(f'there are {last_row} records')
                     # Find the last row and add a new record
                     id_query = QSqlQuery()
                     id_query.prepare("SELECT recID, MAX(PID0) FROM PixelVerification")
@@ -514,7 +667,7 @@ def open_obs_ui(local_db_path):
                     if id_query.next() is None:
                         pid0 = 1
                     else:
-                        print('query return {}'.format(id_query.value(1)))
+                        #print(f'max pixel value is: {id_query.value(1)}')
                         pid0 = id_query.value(1) + 1
                     pid = "{}_0".format(pid0)
                     add_query = QSqlQuery()
@@ -528,6 +681,7 @@ def open_obs_ui(local_db_path):
                     add_query.exec()
                     self.mapper.submit()
                     self.model.select() 
+                    self.reset_filters()
                     self.mapper.toLast()
                     self.color_neighborhood()
                         
@@ -565,15 +719,15 @@ def open_obs_ui(local_db_path):
                     this_pid = self.pid_info.text()
                     this_date = self.imgdate_entry.text()
                     next_rec = self.model.rowCount()+1
-                    #print('next record id = {}'.format(next_rec))
+                    #print(f'next record id = {next_rec}')
                     pid0 = this_pid.split('_')[0]
                     for i in range(9):
                         pid = f'{pid0}_{i}'
                         next_id = (next_rec+i)
                         new_date = entry
-                        #print('pid: {}'.format(pid))
-                        #print('next_id: {}'.format(next_id))
-                        #print('new_date: {}'.format(new_date))
+                        #print(f'pid: {pid}')
+                        #print(f'next_id: {next_id}')
+                        #print(f'new_date: {new_date}')
                         cpy_qry = QSqlQuery("CREATE TABLE tempTable AS SELECT * FROM PixelVerification WHERE PID=? AND imgDate=?")
                         cpy_qry.bindValue(0,pid)
                         cpy_qry.bindValue(1,this_date)
@@ -607,64 +761,78 @@ def open_obs_ui(local_db_path):
                 
                 
         def add_neighbor(self):
-            
-            self.mapper.submit()
-            data_clean = self.check_data()
-            if data_clean == False:
-                return False
-            
-            else:
-                this_neighbor = int(self.sender().objectName().split('_')[1])
-                print('copying record for neighbor {}'.format(this_neighbor))
-                this_rec_id = self.recid_info.text()
-                this_pid = self.pid_info.text()
-                next_rec = self.model.rowCount()+1
-                this_date = self.imgdate_entry.text()
-                cpy_qry = QSqlQuery("CREATE TABLE tempTable AS SELECT * FROM PixelVerification WHERE PID=? AND imgDate=?")
-                cpy_qry.bindValue(0,this_pid)
-                cpy_qry.bindValue(1,this_date)
-                cpy_qry.exec()
-                new_pid = '{}_{}'.format(this_pid.split('_')[0],this_neighbor)
-                check_qry = QSqlQuery("SELECT * FROM PixelVerification WHERE PID=? AND imgDate=?")
-                check_qry.bindValue(0,new_pid)
-                check_qry.bindValue(1,this_date)
-                check_qry.exec()
-                if check_qry.next():
-                    msg = QMessageBox()
-                    msg.setWindowTitle("DUPLICATE RECORD")
-                    msg.setIcon(QMessageBox.Warning)
-                    msg.setText("There is already a record in the db for this PID and date")
-                    msg.exec_()
-                    
-                    return False
+            ## check if record already exists and go to it if it does
+            this_neighbor = int(self.sender().objectName().split('_')[1])
+            #print(this_neighbor)
+            this_rec_id = self.recid_info.text()
+            this_pid = self.pid_info.text()
+            this_pid0 = this_pid.split('_')[0]
+            next_rec = self.model.rowCount()+1
+            this_date = self.imgdate_entry.text()
+            new_pid = f'{this_pid0}_{this_neighbor}'
+            #print(new_pid)
+            check_qry = QSqlQuery("SELECT * FROM PixelVerification WHERE PID=? AND imgDate=?")
+            check_qry.bindValue(0,new_pid)
+            check_qry.bindValue(1,this_date)
+            check_qry.exec()
+            if check_qry.next():
+                msg = QMessageBox()
+                msg.setWindowTitle("DUPLICATE RECORD")
+                msg.setIcon(QMessageBox.Warning)
+                msg.setText("There is already a record in the db for this PID and date")
+                ret = msg.question(self,'', "Do you want to go to the existing record?", msg.Yes | msg.No)
+                
+                if ret == msg.Yes:
+                    self.goto_record(new_pid,this_date)
+                    return True
                 
                 else:
-                    fix_cpy_qry = QSqlQuery("UPDATE tempTable SET recID=?, PID1=?, PID=?")
-                    fix_cpy_qry.bindValue(0,next_rec)
-                    fix_cpy_qry.bindValue(1,this_neighbor)
-                
-                    fix_cpy_qry.bindValue(2,new_pid)
-                    fix_cpy_qry.exec()
-                    ## Paste record into pixel verificaiton table and advance to record
-                    QSqlQuery("INSERT INTO PixelVerification SELECT * FROM tempTable").exec()
-                    QSqlQuery("DROP TABLE tempTable").exec()
-      
-                    self.mapper.submit()
-                    self.model.select() 
-                    self.mapper.toLast()
-                    self.color_neighborhood()
-                
-                    if self.recid_info.text() == this_rec_id:
-                        msg = QMessageBox()
-                        msg.setWindowTitle("DID NOT ADD RECORD")
-                        msg.setIcon(QMessageBox.Warning)
-                        msg.setText("check for duplicate dates")
-                        msg.exec_()
+                    return False
+            else:
+                self.mapper.submit()
+                data_clean = self.check_data()
+                if data_clean == False:
+                    return False
                     
-                        return False
+                else:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    ret = msg.question(self,'', "Do you want to go to edit this neighbor?", msg.Yes | msg.No)
+
+                    if ret == msg.Yes:
+
+                        print(f'copying record for neighbor {this_neighbor}')
+                        cpy_qry = QSqlQuery("CREATE TABLE tempTable AS SELECT * FROM PixelVerification WHERE PID=? AND imgDate=?")
+                        cpy_qry.bindValue(0,this_pid)
+                        cpy_qry.bindValue(1,this_date)
+                        cpy_qry.exec()
+                
+                        fix_cpy_qry = QSqlQuery("UPDATE tempTable SET recID=?, PID1=?, PID=?")
+                        fix_cpy_qry.bindValue(0,next_rec)
+                        fix_cpy_qry.bindValue(1,this_neighbor)
+                        fix_cpy_qry.bindValue(2,new_pid)
+                        fix_cpy_qry.exec()
+                        ## Paste record into pixel verificaiton table and advance to record
+                        QSqlQuery("INSERT INTO PixelVerification SELECT * FROM tempTable").exec()
+                        QSqlQuery("DROP TABLE tempTable").exec()
+      
+                        self.mapper.submit()
+                        self.model.select() 
+                        self.mapper.toLast()
+                        self.color_neighborhood()
+                
+                        if self.recid_info.text() == this_rec_id:
+                            msg = QMessageBox()
+                            msg.setWindowTitle("DID NOT ADD RECORD")
+                            msg.setIcon(QMessageBox.Warning)
+                            msg.setText("check for duplicate dates")
+                            msg.exec_()
+                    
+                            return False
+                        else:
+                            return True
                     else:
-                        return True
-       
+                        return False
     
         def submit_neighborhood(self):
             
