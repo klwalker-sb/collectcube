@@ -15,26 +15,27 @@ import pandas as pd
 import rasterio as rio
 from rasterio import plot
 from rasterio.plot import show
-import sqlite3
-import sqlalchemy as sa
 import matplotlib.pyplot as plt
-from sqlalchemy import Table, Column, Integer, Numeric, String, ForeignKey
-from sqlalchemy import MetaData
-from sqlalchemy import create_engine
 
-def get_sample_in_poly(aoi_in, sampsize, subpoly=None):
+
+def get_sample_in_poly(aoi_in, sampsize, seed=998, subpoly=None):
     '''
     returns geodataframe with n (=sampsize) randomly sampled points within an aoi
     If aoi has multiple polygons, can sample from full extent or a selected polygon
+    to select polygons, need 'UNQ' column (string or int) or can use FID
     out crs will be the same as in crs
     '''
     gdf = gpd.read_file(aoi_in)
     print('aoi file has crs:{}'.format(gdf.crs))
 
     if subpoly is not None:
-        #bounds = gdf.query(f'UNQ == {subpoly}').geometry.total_bounds
-        geosub = gdf.iloc[subpoly]
-        bounds = geosub.geometry.bounds
+        if 'UNQ' in gdf.columns:
+            geosub = gdf.query(f"UNQ == '{subpoly}'").geometry
+            bounds = geosub.total_bounds
+            
+        else:
+            geosub = gdf.iloc[subpoly].geometry
+            bounds = geosub.bounds
     else:
         bounds = gdf.geometry.total_bounds
     
@@ -44,13 +45,14 @@ def get_sample_in_poly(aoi_in, sampsize, subpoly=None):
     yext = ymax - ymin
 
     points = []
+    random.seed(seed)
     while len(points) < sampsize:
         # generate a random x and y
         x = xmin + random.random() * xext
         y = ymin + random.random() * yext                                 
         p = Point(x, y)
         if subpoly is not None:
-            if geosub.geometry.contains(p):  # check if point is inside geometry
+            if geosub.contains(p).any():  # check if point is inside geometry
                 points.append(p)
         else:
             if gdf.geometry.contains(p).any():  # check if point is inside geometry
@@ -139,13 +141,18 @@ def find_poly_on_image(zoom_poly, img, poly_file):
     
     print('polys overlapping image: \n',polys_in_img)
     
-def get_full_point_file(pts_in, pt_file_out, res):
+def get_full_point_file(pts_in, pt_file_out, res, lastpt=-1):
+    '''
+    Takes input point file and adds 8 neighboring points to each point for full output file
+    Original points have Center=1. Points are renamed to follow last id if database already exists.
+    '''
+    
     if isinstance(pts_in, gpd.GeoDataFrame):
         pts = pts_in
     else:
         pts = gpd.read_file(pts_in)
         
-    pts['PID'] = pts.apply(lambda x: f'{int(x.name)+1:07d}_0', axis=1)
+    pts['PID'] = pts.apply(lambda x: f'{int(x.name)+lastpt+1:07d}_0', axis=1)
     pts['Center'] = 1
     newdfs=[]
     for index,row in pts.iterrows():
@@ -167,10 +174,10 @@ def get_full_point_file(pts_in, pt_file_out, res):
 
     neighbor_df = pd.concat(newdfs)
     print(type(ptgdf))
-    print('there are {} neighbor pixels'.format(len(neighbor_df)))
+    print(f'there are {len(neighbor_df)} neighbor pixels')
     full_df = pd.concat([pts,neighbor_df])
     
-    print('there are {} total pixels'.format(len(full_df)))
+    print(f'there are {len(full_df)} total pixels')
     full_df.to_file(pt_file_out, driver='ESRI Shapefile')
     return full_df
 
@@ -196,7 +203,7 @@ def make_pixel_boxes_from_pts(pts_in, poly_file_out,res):
     gdf.to_file(poly_file_out, driver='ESRI Shapefile')
     return gdf
 
-def make_pixel_table(pts_in):
+def make_pixel_table(pts_in,samp_group=None):
     if isinstance(pts_in, gpd.GeoDataFrame):
         pts = pts_in
     else:
@@ -205,39 +212,20 @@ def make_pixel_table(pts_in):
     ptsll = pts.to_crs(4326)
     ptsll['cent_lat'] = ptsll['geometry'].y
     ptsll['cent_long'] = ptsll['geometry'].x
+    pts['cent_X'] = pts['geometry'].x
+    pts['cent_Y'] = pts['geometry'].y
+    pts = pd.DataFrame(pts.drop(columns='geometry'))
+    ptsll = pd.DataFrame(ptsll.drop(columns='geometry'))
     
-    pts2 = pd.merge(pts,ptsll[['PID','cent_lat', 'cent_long']],on='PID', how='left')
+    pts2 = pd.merge(pts,ptsll[['PID','cent_lat', 'cent_long']],on='PID', how='inner')
     
-    pts2['cent_X'] = pts2['geometry'].x
-    pts2['cent_Y'] = pts2['geometry'].y
     pts2['ransamp'] = 1
     pts2['checked'] = 0
     pts2['PID0'] = pts2.apply(lambda x: int(x['PID'].split('_')[0]), axis=1)
     pts2['PID1'] = pts2.apply(lambda x: int(x['PID'].split('_')[1]), axis=1)
-    
-    ptdf = pd.DataFrame(pts2.drop(columns='geometry'))
-    
-    return(ptdf)
+    if samp_group:
+        pts2['sampgroup'] = samp_group
+    else:
+        pts2['sampgroup'] = ""
 
-def make_pixel_table_in_db(pixdf, local_db_path, treat_existing):
-    '''
-    Creates sql pixel table in database location {local_db_path}
-    Uses sqlite3 connection because this allows for assigmnet of primary key with pandas to_sql
-    '''
-    with sqlite3.connect(local_db_path) as con:
-    
-        pixdf.to_sql('pixels', con=con, if_exists=treat_existing, index = False, 
-                 dtype= {
-                    'PID': 'TEXT PRIMARY KEY',
-                    'PID0': 'INTEGER',
-                    'PID1': 'INTEGER',
-                    'Center' : 'INTEGER',
-                    'cent_lat' : 'REAL',
-                    'cent_lon' : 'REAL',
-                    'cent_X' : 'REAL', 
-                    'cent_Y' : 'REAL',
-                    'ransamp' : 'INTEGER',
-                    'checked' : 'INTEGER'
-                 }                
-                ) 
-    con.close()
+    return(pts2)

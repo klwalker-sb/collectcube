@@ -5,17 +5,43 @@ import os
 import sys
 import sqlite3
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy import Table, Column, Integer, Numeric, Text, Date, ForeignKey, insert, MetaData
 
 
 def make_db_sql(local_db_path):
+    ## NOT USING THIS CURRENTLY
     connection = sqlite3.connect(local_db_path)
     cursor = connection.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS PixelVerification (recID INT, PID TEXT, imgDate TEXT, LC5 TEXT, LC25 TEXT)''')
     connection.commit()
     connection.close()
 
+    
+def make_pixel_table_in_db(pixdf, local_db_path, treat_existing):
+    '''
+    Creates sql pixel table in database location {local_db_path}
+    Uses sqlite3 connection because this allows for assigmnet of primary key with pandas to_sql
+    '''
+    with sqlite3.connect(local_db_path) as con:
+    
+        pixdf.to_sql('pixels', con=con, if_exists=treat_existing, index = False, 
+                 dtype= {
+                    'PID': 'TEXT PRIMARY KEY',
+                    'PID0': 'INTEGER',
+                    'PID1': 'INTEGER',
+                    'Center' : 'INTEGER',
+                    'cent_lat' : 'REAL',
+                    'cent_lon' : 'REAL',
+                    'cent_X' : 'REAL', 
+                    'cent_Y' : 'REAL',
+                    'ransamp' : 'INTEGER',
+                    'sampgroup' : 'TEXT',
+                    'checked' : 'INTEGER'
+                 }                
+                ) 
+    con.close()
+    
 def make_LC_table_from_lut(lut, local_db_path, treat_existing):
     '''
     Creates sql pixel table in database location {local_db_path}
@@ -117,3 +143,42 @@ def populate_LC5_table(engine):
         con.commit()
     con.close()
         
+def get_max_id_in_db(db_path,extra_pix=None):
+    ## First check max id in db:
+    sql_db_path = 'sqlite:///'+ db_path
+    engine = create_engine(sql_db_path, echo=False)
+    with engine.connect() as conn:
+        if sa.inspect(engine).has_table('PixelVerification'):
+            df = pd.read_sql_table('PixelVerification', conn)
+            p_max = df['PID0'].max()
+        else:
+            p_max = -1
+        if inspect(engine).has_table('pixels'):   
+            df2 = pd.read_sql_table('pixels', conn)
+            p_max2 = df2['PID0'].max()
+        else:
+            p_max2 = -1
+            
+    ## Now check max id in pt_file:
+    if extra_pix == None:
+        p_max3 = -1
+    elif isinstance(extra_pix, gpd.GeoDataFrame):
+        p_max3 = extra_pix['PID0'].max()    
+    else:
+        pix = gpd.read_file(extra_pix)
+        p_max3 = pix['PID0'].max()
+    
+    pid_max = max(p_max,p_max2,p_max3)
+    
+    return pid_max
+
+## Check that Table was made (and read back as pandas dataframe)
+def check_table(local_db_path,tablex):
+    sql_db_path = 'sqlite:///' + local_db_path
+    engine = create_engine(sql_db_path, echo=False)
+    with engine.connect() as cnx:
+        df = pd.read_sql_table(tablex, con=cnx)
+        print(df.tail())
+    cnx.close()
+
+    return df
