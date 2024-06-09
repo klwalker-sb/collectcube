@@ -17,7 +17,7 @@ def make_db_sql(local_db_path):
     connection.commit()
     connection.close()
 
-    
+
 def make_pixel_table_in_db(pixdf, local_db_path, treat_existing):
     '''
     Creates sql pixel table in database location {local_db_path}
@@ -142,13 +142,19 @@ def populate_LC5_table(engine):
         con.execute(ins, LC5Classes)
         con.commit()
     con.close()
-        
+
+def make_db(db_path):
+    sql_db_path = 'sqlite:///'+ db_path
+    engine = create_engine(sql_db_path, echo=False)
+    make_main_support_tables(engine)
+    populate_LC5_table(engine)
+    
 def get_max_id_in_db(db_path,extra_pix=None):
     ## First check max id in db:
     sql_db_path = 'sqlite:///'+ db_path
     engine = create_engine(sql_db_path, echo=False)
     with engine.connect() as conn:
-        if sa.inspect(engine).has_table('PixelVerification'):
+        if inspect(engine).has_table('PixelVerification'):
             df = pd.read_sql_table('PixelVerification', conn)
             p_max = df['PID0'].max()
         else:

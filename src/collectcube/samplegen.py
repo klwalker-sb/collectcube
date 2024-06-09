@@ -141,7 +141,7 @@ def find_poly_on_image(zoom_poly, img, poly_file):
     
     print('polys overlapping image: \n',polys_in_img)
     
-def get_full_point_file(pts_in, pt_file_out, res, lastpt=-1):
+def get_full_point_file(pts_in, pt_file_out, res, lastpt=-1, write_pts=False):
     '''
     Takes input point file and adds 8 neighboring points to each point for full output file
     Original points have Center=1. Points are renamed to follow last id if database already exists.
@@ -178,10 +178,13 @@ def get_full_point_file(pts_in, pt_file_out, res, lastpt=-1):
     full_df = pd.concat([pts,neighbor_df])
     
     print(f'there are {len(full_df)} total pixels')
-    full_df.to_file(pt_file_out, driver='ESRI Shapefile')
+    
+    if write_pts==True:
+        full_df.to_file(pt_file_out, driver='ESRI Shapefile')
+    
     return full_df
 
-def make_pixel_boxes_from_pts(pts_in, poly_file_out,res):
+def make_pixel_boxes_from_pts(pts_in, poly_file_out,res,write_boxes=False):
     if isinstance(pts_in, gpd.GeoDataFrame):
         pts = pts_in
     else:
@@ -200,7 +203,10 @@ def make_pixel_boxes_from_pts(pts_in, poly_file_out,res):
     df = pd.DataFrame({'geometry': boxes})
     df['geometry'] = df['geometry'].apply(shapely.geometry.Polygon)
     gdf = gpd.GeoDataFrame(df, crs=pts.crs, geometry=df['geometry'])
-    gdf.to_file(poly_file_out, driver='ESRI Shapefile')
+    
+    if write_boxes==True:
+        gdf.to_file(poly_file_out, driver='ESRI Shapefile')
+    
     return gdf
 
 def make_pixel_table(pts_in,samp_group=None):
