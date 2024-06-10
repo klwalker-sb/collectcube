@@ -182,9 +182,21 @@ def get_max_id_in_db(db_path,extra_pix=None):
 def check_table(local_db_path,tablex):
     sql_db_path = 'sqlite:///' + local_db_path
     engine = create_engine(sql_db_path, echo=False)
-    with engine.connect() as cnx:
+    with engine.connect() as conn:
         df = pd.read_sql_table(tablex, con=cnx)
         print(df.tail())
-    cnx.close()
+    conn.close()
 
     return df
+
+def delete_record_sqlite(local_db_path, pid):
+    conn = sqlite3.connect(local_db_path)
+    cursor = conn.cursor()
+    try:
+        sql_del = cursor.execute(f"DELETE FROM PixelVerification WHERE PID = '{pid}'")
+        print("Total records affected: ", sql_del.rowcount)
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Oops! Something went wrong. Error: {e}")
+        # reverse the change in case of error
+        conn.rollback()

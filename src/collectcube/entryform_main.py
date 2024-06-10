@@ -464,7 +464,15 @@ def open_obs_ui(local_db_path):
             text, ok = QInputDialog().getText(self, "PID chooser",
                                      "PID:", QLineEdit.Normal)
             if ok and text:
-                self.new_pid(text)  
+                ## mapke sure that pid being entered fits formatting criteria:
+                if text.isdigit() or (text.split('_')[0].isdigit() and text.split('_')[1].isdigit()):  
+                    self.new_pid(text)
+                else:
+                    msg = QMessageBox()
+                    msg.setWindowTitle("INCORRECT FORMAT")
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setText("pid format needs to be number or number_number")
+                    msg.exec_()
                 
         def goto_record(self,pid,dt=None):
             #print(pid)
@@ -619,7 +627,7 @@ def open_obs_ui(local_db_path):
                 elif lc == 'NoVeg_Water':
                     self.water_entry.setText('100')
                 elif lc.startswith('Grass'):
-                    self.grass.entry.setText('100')
+                    self.grass_entry.setText('100')
                 elif lc.startswith('Crops-Orchard') or lc in ['Crops-Banana','Crops-Yerba-Mate','Crops-Vineyard','D_Crop_Med']:
                     self.cropmed_entry.setText('100')
                 elif lc == 'M_Crops-mix':
