@@ -77,8 +77,8 @@ def open_obs_ui(local_db_path):
             ## TODO: set checked = 1 for pixel with same PID when form is closed (relation table)
             self.pid_info = QLineEdit()
             main_layout_head1_left.addRow(QLabel("PID"), self.pid_info)
-            self.pid0_entry = QLineEdit()
-            main_layout_head1_left.addRow(QLabel("PID0"), self.pid0_entry)
+            #self.pid0_entry = QLineEdit()
+            #main_layout_head1_left.addRow(QLabel("PID0"), self.pid0_entry)
             self.recid_info.setDisabled(True)
             
             self.imgdate_entry = QLineEdit()
@@ -287,7 +287,7 @@ def open_obs_ui(local_db_path):
             
             self.mapper.addMapping(self.recid_info, 0)
             self.mapper.addMapping(self.pid_info, 1)
-            self.mapper.addMapping(self.pid0_entry, 2)
+            #self.mapper.addMapping(self.pid0_entry, 2)
             #self.mapper.addMapping(self.pid1_entry, 3)
             self.mapper.addMapping(self.imgdate_entry, 4)
             
@@ -425,11 +425,14 @@ def open_obs_ui(local_db_path):
             this_date = self.imgdate_entry.text()
             self.color_neighborhood()  
             ## Fill in derived pid0 and pid1 attributes
-            add_fields = QSqlQuery("UPDATE PixelVerification SET PID0=? PID1=? WHERE recID=?")
-            add_fields.bindValue(0, this_rec_id)
-            add_fields.bindValue(1, this_pid.split('_')[0])
-            add_fields.bindValue(2, this_pid.split('_')[1])
-            add_fields.exec()
+            add_fields = QSqlQuery("UPDATE PixelVerification SET PID0=?, PID1=? WHERE recID=?")
+            add_fields.bindValue(2, this_rec_id)
+            add_fields.bindValue(0, self.pid_info.text().split('_')[0])
+            add_fields.bindValue(1, self.pid_info.text().split('_')[1])
+            qry_stat = add_fields.exec()
+            if qry_stat is not True:
+                errorText = add_fields.lastError().text()
+                QMessageBox.critical(self, 'Error getting new pid0 or pid1:', errorText)
             self.mapper.submit()
         
         def new_pid(self,pid,dt=None):
@@ -706,6 +709,8 @@ def open_obs_ui(local_db_path):
                     self.mapper.submit()
                     self.model.select() 
                     self.reset_filters()
+                    while self.model.canFetchMore():
+                        self.model.fetchMore()
                     self.mapper.toLast()
                     self.color_neighborhood()
                         
