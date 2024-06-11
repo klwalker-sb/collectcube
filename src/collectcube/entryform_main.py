@@ -77,6 +77,8 @@ def open_obs_ui(local_db_path):
             ## TODO: set checked = 1 for pixel with same PID when form is closed (relation table)
             self.pid_info = QLineEdit()
             main_layout_head1_left.addRow(QLabel("PID"), self.pid_info)
+            self.pid0_entry = QLineEdit()
+            main_layout_head1_left.addRow(QLabel("PID0"), self.pid0_entry)
             self.recid_info.setDisabled(True)
             
             self.imgdate_entry = QLineEdit()
@@ -285,7 +287,7 @@ def open_obs_ui(local_db_path):
             
             self.mapper.addMapping(self.recid_info, 0)
             self.mapper.addMapping(self.pid_info, 1)
-            #self.mapper.addMapping(self.pid0_entry, 2)
+            self.mapper.addMapping(self.pid0_entry, 2)
             #self.mapper.addMapping(self.pid1_entry, 3)
             self.mapper.addMapping(self.imgdate_entry, 4)
             
@@ -314,7 +316,12 @@ def open_obs_ui(local_db_path):
             self.mapper.addMapping(self.notes_entry, 27)
             
             self.model.select()
+            ## Add the following two lines to allow form to view past record 255
+            ##  TODO: implement partial reads to avoid reading full db for everything?
+            while self.model.canFetchMore():
+                self.model.fetchMore()
             self.mapper.toLast()
+           
 
             self.setMinimumSize(QSize(250, 600))
             
@@ -350,6 +357,8 @@ def open_obs_ui(local_db_path):
             
         def get_next_rec(self):
             self.reset_filters()
+            while self.model.canFetchMore():
+                self.model.fetchMore()
             self.mapper.toNext()
             
         def get_prev_rec(self):
@@ -422,8 +431,6 @@ def open_obs_ui(local_db_path):
             add_fields.bindValue(2, this_pid.split('_')[1])
             add_fields.exec()
             self.mapper.submit()
-            #self.lc_detail_relmodel.setFilter("")
-            #self.lc_gen_relmodel.setFilter("")
         
         def new_pid(self,pid,dt=None):
             if '_' in pid:
@@ -509,7 +516,7 @@ def open_obs_ui(local_db_path):
                 #print(f'going to rec:{rec}')
                 self.model.select()
                 self.reset_filters()
-                self.mapper.setCurrentIndex(rec-1)
+                self.mapper.setCurrentIndex(rec)
                 self.color_neighborhood()
                 
         def goto_pid(self):
@@ -614,6 +621,14 @@ def open_obs_ui(local_db_path):
             lc5 = lc5_qry.value(1)
             self.lc_gen_relmodel.setFilter("LC5type like'" +lc5+ "%%'")
         
+        def get_next_recid(self):
+            id_qry = QSqlQuery("SELECT MAX(recID) FROM PixelVerification") 
+            id_qry.exec()
+            id_qry.next()
+            next_rec = id_qry.value(0) + 1
+            
+            return next_rec
+        
         def populate_pure_percentage(self):
             '''
             enter 100 in corresponding field if pixel is marked as pure
@@ -675,9 +690,10 @@ def open_obs_ui(local_db_path):
                     if id_query.next() is None:
                         pid0 = 1
                     else:
-                        #print(f'max pixel value is: {id_query.value(1)}')
+                        #id_query.next()
+                        print(f'max pixel value is: {id_query.value(1)}')
                         pid0 = id_query.value(1) + 1
-                    pid = "{}_0".format(pid0)
+                    pid = f"{pid0}_0"
                     add_query = QSqlQuery()
                     add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC)"
                           "VALUES( ?, ?, ?, ?, ?)")
@@ -723,26 +739,25 @@ def open_obs_ui(local_db_path):
             
                 else:
                     ## Copy current record and place in temp table to change pk recID to next available record
+                    ## Will copy all neighbors that have data entered for this date
+                    ## TODO add method to edit all neighbors together after copying
                     this_rec_id = self.recid_info.text()
                     this_pid = self.pid_info.text()
                     this_date = self.imgdate_entry.text()
-                    next_rec = self.model.rowCount()+1
-                    #print(f'next record id = {next_rec}')
+                    next_rec = self.get_next_recid() 
+                    print(f'next record id = {next_rec}')
+                    
                     pid0 = this_pid.split('_')[0]
                     for i in range(9):
                         pid = f'{pid0}_{i}'
-                        next_id = (next_rec+i)
-                        new_date = entry
-                        #print(f'pid: {pid}')
-                        #print(f'next_id: {next_id}')
-                        #print(f'new_date: {new_date}')
+                        next_recid = (next_rec+i)
                         cpy_qry = QSqlQuery("CREATE TABLE tempTable AS SELECT * FROM PixelVerification WHERE PID=? AND imgDate=?")
                         cpy_qry.bindValue(0,pid)
                         cpy_qry.bindValue(1,this_date)
                         cpy_qry.exec()
                         fix_cpy_qry = QSqlQuery("UPDATE tempTable SET recID=?, imgDate=?")
-                        fix_cpy_qry.bindValue(0,(next_id))
-                        fix_cpy_qry.bindValue(1,new_date)
+                        fix_cpy_qry.bindValue(0,(next_recid))
+                        fix_cpy_qry.bindValue(1,entry)
                         fix_cpy_qry.exec()
                         ## Paste record into pixel verificaiton table
                         QSqlQuery("INSERT INTO PixelVerification SELECT * FROM tempTable").exec()
@@ -756,7 +771,7 @@ def open_obs_ui(local_db_path):
                     ## If it did not succeed (there is no new record), probably because there are duplicate dates
                     ##    (this works because we get two records with the same recID and cannot insert them)
                     ##    warn user so they do not modify previous record
-                    if self.recid_info.text() == this_rec_id:
+                    if self.recid_info.text() == next_rec:
                         msg = QMessageBox()
                         msg.setWindowTitle("DID NOT ADD RECORD")
                         msg.setIcon(QMessageBox.Warning)
@@ -775,7 +790,7 @@ def open_obs_ui(local_db_path):
             this_rec_id = self.recid_info.text()
             this_pid = self.pid_info.text()
             this_pid0 = this_pid.split('_')[0]
-            next_rec = self.model.rowCount()+1
+            next_rec = self.get_next_recid() 
             this_date = self.imgdate_entry.text()
             new_pid = f'{this_pid0}_{this_neighbor}'
             #print(new_pid)
@@ -852,7 +867,8 @@ def open_obs_ui(local_db_path):
                 this_pid = self.pid_info.text()
                 this_pid0 = self.pid_info.text().split('_')[0]
                 cent_pid = f'{this_pid0}_0'
-                next_rec = self.model.rowCount()+1
+                
+                next_rec = self.get_next_recid()
                 this_date = self.imgdate_entry.text()
                 self.get_neighborhood_info()
                 changed_pid1s = [k.split('_')[1] for k in self.changed_neighbors]
@@ -870,6 +886,7 @@ def open_obs_ui(local_db_path):
                         return False
                     
                 else:
+                    print('adding neighborhood pixels...')
                     for row, value in enumerate (unchanged_pids):
                         cpy_qry = QSqlQuery("CREATE TABLE tempTable AS SELECT * FROM PixelVerification WHERE PID=? AND imgDate=?")
                         cpy_qry.bindValue(0,cent_pid)
