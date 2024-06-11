@@ -463,6 +463,8 @@ def open_obs_ui(local_db_path):
                 add_query.exec()
                 self.mapper.submit()
                 self.model.select() 
+                while self.model.canFetchMore():
+                    self.model.fetchMore()
                 self.mapper.toLast()
                 self.color_neighborhood()
         
@@ -503,6 +505,7 @@ def open_obs_ui(local_db_path):
             pidmodel = QSqlQueryModel(self)
             pidmodel.setQuery(pid_qry)
             rec = pidmodel.record(0).value(0)
+            print(rec)
             if rec==None: 
                 buttonReply = QMessageBox.question(
                     self, "RECORD DOES NOT EXIST", "Do you want to create new record?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -518,6 +521,8 @@ def open_obs_ui(local_db_path):
             else:
                 #print(f'going to rec:{rec}')
                 self.model.select()
+                while self.model.canFetchMore():
+                    self.model.fetchMore()
                 self.reset_filters()
                 self.mapper.setCurrentIndex(rec)
                 self.color_neighborhood()
@@ -693,8 +698,7 @@ def open_obs_ui(local_db_path):
                     if id_query.next() is None:
                         pid0 = 1
                     else:
-                        #id_query.next()
-                        print(f'max pixel value is: {id_query.value(1)}')
+                        #print(f'max pixel value is: {id_query.value(1)}')
                         pid0 = id_query.value(1) + 1
                     pid = f"{pid0}_0"
                     add_query = QSqlQuery()
@@ -769,7 +773,9 @@ def open_obs_ui(local_db_path):
                         QSqlQuery("DROP TABLE tempTable").exec()
       
                     self.mapper.submit()
-                    self.model.select() 
+                    self.model.select()
+                    while self.model.canFetchMore():
+                        self.model.fetchMore()
                     self.mapper.toLast()
                     self.color_neighborhood()
                 
@@ -846,6 +852,8 @@ def open_obs_ui(local_db_path):
       
                         self.mapper.submit()
                         self.model.select() 
+                        while self.model.canFetchMore():
+                            self.model.fetchMore()
                         self.mapper.toLast()
                         self.color_neighborhood()
                 
