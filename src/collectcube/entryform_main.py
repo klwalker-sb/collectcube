@@ -254,12 +254,11 @@ def open_obs_ui(local_db_path):
                                      "rf - regular fluc. (tides)", "pi - positional instability"])
             main_layout_foot.addRow(QLabel("stability note"), self.stability_entry)
             self.state_entry = QComboBox()
-            self.state_entry.addItems(["--","Bare","Young","Mature","Harvest","Burnt","Flooded","Deciduous-partial","Deciduous-full"])
+            self.state_entry.addItems(["--","Bare","Young","Mature","Harvest","Burnt","Flooded","Fallowed","Deciduous-partial","Deciduous-full"])
             main_layout_foot.addRow(QLabel("current state"), self.state_entry)
             self.notes_entry = QLineEdit()
             main_layout_foot.addRow(QLabel("Notes"), self.notes_entry)
             main_layout.addLayout(main_layout_foot)
-            
             self.model = QSqlRelationalTableModel(db=db)
             self.model.setTable('PixelVerification')
             
@@ -327,16 +326,19 @@ def open_obs_ui(local_db_path):
             
             controls = QHBoxLayout()
   
-            prev_rec = QPushButton("<")
+            prev_rec = QPushButton("<rec")
             prev_rec.clicked.connect(self.get_prev_rec)
-            next_rec = QPushButton(">")
+            next_rec = QPushButton(">rec")
             next_rec.clicked.connect(self.get_next_rec)
-            next_pix = QPushButton("next_pix")
+            next_pix = QPushButton(">>pix")
             next_pix.clicked.connect(self.get_next_pix)
+            next_pix_c = QPushButton(">pix")
+            next_pix_c.clicked.connect(self.get_next_pix_consec)
             save_rec = QPushButton("Save Changes")
             save_rec.clicked.connect(self.update_record)
             controls.addWidget(prev_rec)
             controls.addWidget(next_rec)
+            controls.addWidget(next_pix_c)
             controls.addWidget(next_pix)
             controls.addWidget(save_rec)
             
@@ -520,11 +522,12 @@ def open_obs_ui(local_db_path):
             
             else:
                 #print(f'going to rec:{rec}')
-                self.model.select()
-                while self.model.canFetchMore():
-                    self.model.fetchMore()
-                self.reset_filters()
-                self.mapper.setCurrentIndex(rec)
+                #while self.model.canFetchMore():
+                #    self.model.fetchMore()
+                #self.reset_filters()
+                #self.mapper.setCurrentIndex(rec) # this works for rowid, not recID
+                self.model.setFilter('recID = {}'.format(rec))
+                self.mapper.toFirst()
                 self.color_neighborhood()
                 
         def goto_pid(self):
@@ -671,10 +674,13 @@ def open_obs_ui(local_db_path):
                     self.highveg_entry.setText('100')
              
         def get_next_pix(self):
-            ## Save current row
+            '''
+            starts new record after next available pixel number (greatest existing pixel id + 1) -- skips any gaps
+            '''
+            ## Perform data checks and save current row
             self.update_record()
             if self.check_data() == False:
-                return False
+                return False    
             else:
                 if self.neighborhood_homo.isChecked() == True:
                     self.get_neighborhood_info
@@ -685,27 +691,76 @@ def open_obs_ui(local_db_path):
                         msg.setIcon(QMessageBox.Warning)
                         msg.setText("click on cells that are different or submit neighborhood (to copy/paste)")
                         msg.exec_()
-                        
                         return False
-                    
-                else:      
-                    last_row = self.model.rowCount()
-                    #print(f'there are {last_row} records')
-                    # Find the last row and add a new record
-                    id_query = QSqlQuery()
-                    id_query.prepare("SELECT recID, MAX(PID0) FROM PixelVerification")
-                    id_query.exec()
-                    if id_query.next() is None:
-                        pid0 = 1
-                    else:
-                        #print(f'max pixel value is: {id_query.value(1)}')
-                        pid0 = id_query.value(1) + 1
-                    pid = f"{pid0}_0"
+                
+            id_query = QSqlQuery()
+            id_query.prepare("SELECT recID, MAX(PID0) FROM PixelVerification")
+            id_query.exec()
+            if id_query.next() is None:
+                pid0 = 1
+            else:
+                #print(f'max pixel value is: {id_query.value(1)}')
+                pid0 = id_query.value(1) + 1
+            pid = f"{pid0}_0"
+            add_query = QSqlQuery()
+            add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC)"
+                          "VALUES( ?, ?, ?, ?, ?)")
+            add_query.bindValue(0, pid)
+            add_query.bindValue(1, pid0)
+            add_query.bindValue(2, 0)
+            add_query.bindValue(3, 0)
+            add_query.bindValue(4, 0)
+            add_query.exec()
+            self.mapper.submit()
+            self.model.select() 
+            self.reset_filters()
+            while self.model.canFetchMore():
+                self.model.fetchMore()
+            self.mapper.toLast()
+            self.color_neighborhood()
+                        
+            return True
+        
+        def get_next_pix_consec(self):
+            '''
+            starts new record at next pixel number in sequence that does not have existing record
+            '''
+            ## Perform data checks and save current row
+            self.update_record()
+            if self.check_data() == False:
+                return False   
+            else:
+                if self.neighborhood_homo.isChecked() == True:
+                    self.get_neighborhood_info
+                    if len(self.changed_neighbors) < 9:
+                        print(len(self.changed_neighbors))
+                        msg = QMessageBox()
+                        msg.setWindowTitle("MISSING NEIGHBORS")
+                        msg.setIcon(QMessageBox.Warning)
+                        msg.setText("click on cells that are different or submit neighborhood (to copy/paste)")
+                        msg.exec_() 
+                        return False
+                
+            found_next = False
+            this_pid = self.pid_info.text()
+            this_pid0 = this_pid.split('_')[0]
+            i = int(this_pid0)
+            while found_next == False:
+                i = i+1
+                id_query = QSqlQuery()
+                id_query.prepare("SELECT recID, PID0 FROM PixelVerification WHERE PID0=?")
+                id_query.bindValue(0,i)
+                id_query.exec()
+                if id_query.next():
+                    found_next = False
+                else:
+                    found_next = True
+                    pid = f"{i}_0"
                     add_query = QSqlQuery()
                     add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC)"
                           "VALUES( ?, ?, ?, ?, ?)")
                     add_query.bindValue(0, pid)
-                    add_query.bindValue(1, pid0)
+                    add_query.bindValue(1, i)
                     add_query.bindValue(2, 0)
                     add_query.bindValue(3, 0)
                     add_query.bindValue(4, 0)
@@ -718,7 +773,7 @@ def open_obs_ui(local_db_path):
                     self.mapper.toLast()
                     self.color_neighborhood()
                         
-                    return True
+            return True
         
         def view_dates(self):
             self.date_model = QSqlTableModel()
