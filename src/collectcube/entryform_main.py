@@ -36,7 +36,7 @@ from PyQt5.QtWidgets import (
     QInputDialog
 )
     
-def open_obs_ui(local_db_path):
+def open_obs_ui(local_db_path, entry_lev):
     db = QSqlDatabase.addDatabase('QSQLITE')
     db.setDatabaseName(local_db_path)
     db.open()
@@ -63,6 +63,9 @@ def open_obs_ui(local_db_path):
             super().__init__()
             
             main_layout = QVBoxLayout()
+            main_layout_head1a = QHBoxLayout()
+            main_layout_head1ar = QHBoxLayout()
+            main_layout_head1al = QHBoxLayout()
             main_layout_head1 = QHBoxLayout()
             main_layout_head1_left = QFormLayout()
             
@@ -70,8 +73,22 @@ def open_obs_ui(local_db_path):
             
             ## recID is the primary key for the table. it autoincrements and is hidden.
             self.recid_info = QLineEdit()
-            main_layout_head1_left.addRow(QLabel("rec_id"), self.recid_info)
+            rec_lab = QLabel(self.recid_info)
+            rec_lab.setText("rec_id:")
+            main_layout_head1al.addWidget(rec_lab)
+            main_layout_head1al.addWidget(self.recid_info)
             self.recid_info.setDisabled(True)
+            main_layout_head1a.addLayout(main_layout_head1al)
+            
+            self.entry_lev_info = QLineEdit()
+            entry_lab = QLabel(self.entry_lev_info)
+            entry_lab.setText("rec_entry_lev:")
+            main_layout_head1ar.addWidget(entry_lab)
+            main_layout_head1ar.addWidget(self.entry_lev_info)
+            self.entry_lev_info.setDisabled(True)
+            main_layout_head1a.addLayout(main_layout_head1ar)
+            
+            main_layout.addLayout(main_layout_head1a)
             
             ## PID is a string primary ID. PID0 and PID1 are int components
             ## TODO: set checked = 1 for pixel with same PID when form is closed (relation table)
@@ -111,170 +128,185 @@ def open_obs_ui(local_db_path):
             
             main_layout_head2 = QFormLayout()
             
-            ## linked landcover dropdowns (detailed lc categories shown once LC5 cat is selected): 
+            ## linked landcover dropdowns (detailed lc categories shown once LC5 cat is selected):
             self.lc_gen_picker = QComboBox()
-            self.lc_gen_picker.setStyleSheet("QComboBox{background-color:lightyellow}")
-            main_layout_head2.addRow(QLabel("Main Land cover"), self.lc_gen_picker)
             self.lc_gen_picker.setFont(bigfont) 
-
+            main_layout_head2.addRow(QLabel("Main Land cover"), self.lc_gen_picker)
+            if entry_lev > 1:
+                self.lc_gen_picker.setStyleSheet("QComboBox{background-color:lightyellow}")
+            else:
+                self.lc_gen_picker.setDisabled(True)
+                
             self.lc_detail_picker = QComboBox()
             self.lc_detail_picker.setStyleSheet("QComboBox{background-color:lightyellow}")
-            main_layout_head2.addRow(QLabel("Land Cover detail"), self.lc_detail_picker) 
             self.lc_detail_picker.setFont(bigfont)
+            main_layout_head2.addRow(QLabel("Land Cover detail"), self.lc_detail_picker) 
             
-            main_layout.addLayout(main_layout_head2)
+            main_layout.addLayout(main_layout_head2) 
             
-            mid_layout = QHBoxLayout()
-            #left_layout = QVBoxLayout()
-            form = QFormLayout()
-            form.setContentsMargins(0,0,-1,-1)
+            if entry_lev > 2:
+                mid_layout = QHBoxLayout()
+                #left_layout = QVBoxLayout()
+                                             
+                form = QFormLayout()
+                form.setContentsMargins(0,0,-1,-1)
             
-            main_layout_head1.addLayout(main_layout_head1_left)
+                self.withinpix_homo = QCheckBox()
+                self.withinpix_homo_lab = QLabel("Include WITHIN Pix homogeneity?") 
+                form.addRow(self.withinpix_homo_lab, self.withinpix_homo)  
+                self.withinpix_homo_lab.setFont(QFont("Times",weight=QFont.Bold))
+                if entry_lev >= 4:
+                    self.withinpix_homo.setCheckState(Qt.Checked)
+                else:
+                    self.withinpix_homo.setCheckState(Qt.Unchecked)
+                self.withinpix_homo.stateChanged.connect(self.include_exclude_withinpix_info)
             
-            self.withinpix_homo = QCheckBox()
-            self.withinpix_homo_lab = QLabel("Include WITHIN Pix homogeneity?") 
-            form.addRow(self.withinpix_homo_lab, self.withinpix_homo)  
-            self.withinpix_homo_lab.setFont(QFont("Times",weight=QFont.Bold))
-            self.withinpix_homo.setCheckState(Qt.Checked)
-            self.withinpix_homo.stateChanged.connect(self.inlude_exclude_withinpix_info)
+                self.purepix = QCheckBox()
+                form.addRow(QLabel("Pixel contains single land cover"), self.purepix)            
+                self.purepix.setCheckState(0)
+                self.purepix.stateChanged.connect(self.populate_pure_percentage)
             
-            self.purepix = QCheckBox()
-            form.addRow(QLabel("Pixel contains single land cover"),  self.purepix)            
-            self.purepix.setCheckState(0)
-            self.purepix.stateChanged.connect(self.populate_pure_percentage)
+                self.built_entry = QLineEdit()
+                form.addRow(QLabel("% BUILT"), self.built_entry)
+                self.bare_entry = QLineEdit()
+                form.addRow(QLabel("% BARE"), self.bare_entry)
+                self.water_entry = QLineEdit()
+                form.addRow(QLabel("% WATER"), self.water_entry)
+                self.cropmono_entry = QLineEdit()
+                form.addRow(QLabel("% MONO CROP LOW"), self.cropmono_entry)
+                self.cropmix_entry = QLineEdit()
+                form.addRow(QLabel("% MIXED CROP"), self.cropmix_entry)
+                self.cropmed_entry = QLineEdit()
+                form.addRow(QLabel("% MED CROP"), self.cropmed_entry)
+                self.grass_entry = QLineEdit()
+                form.addRow(QLabel("% GRASS"), self.grass_entry)
+                self.dead_entry = QLineEdit()
+                form.addRow(QLabel("% DEAD WOODY"), self.dead_entry)
+                self.medveg_entry = QLineEdit()
+                form.addRow(QLabel("% MED VEG"), self.medveg_entry)
+                self.highveg_entry = QLineEdit()
+                form.addRow(QLabel("% TALL WOODY"), self.highveg_entry)
+                self.treeplant0_entry = QLineEdit()
+                form.addRow(QLabel("% YOUNG TREE PLANT(0-2yrs)"), self.treeplant0_entry)
+                self.treeplant_entry = QLineEdit()
+                form.addRow(QLabel("% MATURE TREE PLANT"), self.treeplant_entry)
+                self.forest_entry= QLineEdit()
+                form.addRow(QLabel("% FOREST/TREES"), self.forest_entry)
+                self.age_entry=QLineEdit()
+                form.addRow(QLabel("Estimated Age"), self.age_entry)
             
-            self.built_entry = QLineEdit()
-            form.addRow(QLabel("% BUILT"), self.built_entry)
-            self.bare_entry = QLineEdit()
-            form.addRow(QLabel("% BARE"), self.bare_entry)
-            self.water_entry = QLineEdit()
-            form.addRow(QLabel("% WATER"), self.water_entry)
-            self.cropmono_entry = QLineEdit()
-            form.addRow(QLabel("% MONO CROP LOW"), self.cropmono_entry)
-            self.cropmix_entry = QLineEdit()
-            form.addRow(QLabel("% MIXED CROP"), self.cropmix_entry)
-            self.cropmed_entry = QLineEdit()
-            form.addRow(QLabel("% MED CROP"), self.cropmed_entry)
-            self.grass_entry = QLineEdit()
-            form.addRow(QLabel("% GRASS"), self.grass_entry)
-            self.dead_entry = QLineEdit()
-            form.addRow(QLabel("% DEAD WOODY"), self.dead_entry)
-            self.medveg_entry = QLineEdit()
-            form.addRow(QLabel("% MED VEG"), self.medveg_entry)
-            self.highveg_entry = QLineEdit()
-            form.addRow(QLabel("% TALL WOODY"), self.highveg_entry)
-            self.treeplant0_entry = QLineEdit()
-            form.addRow(QLabel("% YOUNG TREE PLANT(0-2yrs)"), self.treeplant0_entry)
-            self.treeplant_entry = QLineEdit()
-            form.addRow(QLabel("% MATURE TREE PLANT"), self.treeplant_entry)
-            self.forest_entry= QLineEdit()
-            form.addRow(QLabel("% FOREST/TREES"), self.forest_entry)
-            self.age_entry=QLineEdit()
-            form.addRow(QLabel("Estimated Age"), self.age_entry)
+                self.forestprox_entry = QLineEdit()
+                form.addRow(QLabel("Proximity to forest edge"), self.forestprox_entry)
+                self.waterprox_entry = QLineEdit()
+                form.addRow(QLabel("Proximity to water"), self.waterprox_entry)
+                self.percenttree_entry = QLineEdit()
+                ## TODO: add image popup with examples
+                form.addRow(QLabel("% TreeCover"), self.percenttree_entry)
             
-            self.forestprox_entry = QLineEdit()
-            form.addRow(QLabel("Proximity to forest edge"), self.forestprox_entry)
-            self.waterprox_entry = QLineEdit()
-            form.addRow(QLabel("Proximity to water"), self.waterprox_entry)
-            self.percenttree_entry = QLineEdit()
-            ## TODO: add image popup with examples
-            form.addRow(QLabel("% TreeCover"), self.percenttree_entry)
+                mid_layout.addLayout(form)
             
-            mid_layout.addLayout(form)
+                left_spacer = QSpacerItem(40,40,QSizePolicy.Minimum,QSizePolicy.Expanding)
+                mid_layout.addItem(left_spacer)
             
-            left_spacer = QSpacerItem(40,40,QSizePolicy.Minimum,QSizePolicy.Expanding)
-            mid_layout.addItem(left_spacer)
+                right_layout = QVBoxLayout()
+                right_layout.setContentsMargins(0,-1,100,0)
             
-            right_layout = QVBoxLayout()
-            right_layout.setContentsMargins(0,-1,100,0)
+                self.neighborhood_homo = QCheckBox()
+                if entry_lev == 5:
+                    self.neighborhood_homo.setCheckState(Qt.Checked)
+                else:
+                    self.neighborhood_homo.setCheckState(Qt.Unchecked)
+                self.neighborhood_homo.stateChanged.connect(self.include_exclude_neighborhood_info)
+                self.neighborhood_label = QLabel("Include NEIGHBORHOOD homogeneity?",  self.neighborhood_homo)   
+                self.neighborhood_label.setFont(QFont("Times",weight=QFont.Bold))
+                right_layout.addWidget(self.neighborhood_label)
+                right_layout.addWidget(self.neighborhood_homo)
             
-            self.neighborhood_homo = QCheckBox() 
-            self.neighborhood_homo.setCheckState(Qt.Checked)
-            self.neighborhood_homo.stateChanged.connect(self.inlude_exclude_neighborhood_info)
-            self.neighborhood_label = QLabel("Include NEIGHBORHOOD homogeneity?",  self.neighborhood_homo)   
-            self.neighborhood_label.setFont(QFont("Times",weight=QFont.Bold))
-            
-            right_layout.addWidget(self.neighborhood_label)
-            right_layout.addWidget(self.neighborhood_homo)
-            
-            placement_dict = {0:[1,1,1,1],1:[0,0,1,1],2:[0,1,1,1],3:[0,2,1,1],4:[1,0,1,1],
+                placement_dict = {0:[1,1,1,1],1:[0,0,1,1],2:[0,1,1,1],3:[0,2,1,1],4:[1,0,1,1],
                               5:[1,2,1,1],6:[2,0,1,1],7:[2,1,1,1],8:[2,2,1,1]}
-            neighborhood = QGridLayout()
-            neighborhood.setSpacing(2)
-            self.neighbors = {'neighbor_{}'.format(pid0): Neighbor(pid0=pid0) for pid0 in range(9)}
-            for i in range(9):
-                self.neighbors[f'neighbor_{i}'].setText(str(i))
-                self.neighbors[f'neighbor_{i}'].setObjectName(self.neighbors[f'neighbor_{i}'].name)
-                self.neighbors[f'neighbor_{i}'].setStyleSheet('QPushButton{border-color:black;border-width:2px}')
-                self.neighbors[f'neighbor_{i}'].set_color('white')
-                v = placement_dict[i]
-                neighborhood.addWidget(self.neighbors[f'neighbor_{i}'],int(v[0]),int(v[1]),int(v[2]),int(v[3]))             
-                self.neighbors[f'neighbor_{i}'].clicked.connect(self.add_neighbor)
+                neighborhood = QGridLayout()
+                neighborhood.setSpacing(2)
+                self.neighbors = {'neighbor_{}'.format(pid0): Neighbor(pid0=pid0) for pid0 in range(9)}
+                for i in range(9):
+                    self.neighbors[f'neighbor_{i}'].setText(str(i))
+                    self.neighbors[f'neighbor_{i}'].setObjectName(self.neighbors[f'neighbor_{i}'].name)
+                    self.neighbors[f'neighbor_{i}'].setStyleSheet('QPushButton{border-color:black;border-width:2px}')
+                    self.neighbors[f'neighbor_{i}'].set_color('white')
+                    v = placement_dict[i]
+                    neighborhood.addWidget(self.neighbors[f'neighbor_{i}'],int(v[0]),int(v[1]),int(v[2]),int(v[3]))             
+                    self.neighbors[f'neighbor_{i}'].clicked.connect(self.add_neighbor)
               
-            blanklabel0 = QLabel("   ")
-            right_layout.addWidget(blanklabel0)
-            blanklabel1 = QLabel("   ")
-            right_layout.addWidget(blanklabel1)
-            right_layout.addLayout(neighborhood)
+                blanklabel0 = QLabel("   ")
+                right_layout.addWidget(blanklabel0)
+                blanklabel1 = QLabel("   ")
+                right_layout.addWidget(blanklabel1)
+                right_layout.addLayout(neighborhood)
             
-            self.homonbhd9_entry = QSpinBox()
-            self.homonbhd9_entry.setRange(0,8)
-            self.homonbhd9_entry.setValue(8)
-            self.homonbhd9_entry.setStyleSheet("QSpinBox{background-color:lightyellow}")
-            self.homonbhd9_label = QLabel("Num neighbors with same LC: (only for center pix)")
-            self.homonbhd9_label.setGeometry(60, 30, 100, 50) 
-            self.homonbhd9_label.setWordWrap(True) 
+                self.homonbhd9_entry = QSpinBox()
+                self.homonbhd9_entry.setRange(0,8)
+                self.homonbhd9_entry.setValue(8)
+                self.homonbhd9_entry.setStyleSheet("QSpinBox{background-color:lightyellow}")
+                self.homonbhd9_label = QLabel("Num neighbors with same LC: (only for center pix)")
+                self.homonbhd9_label.setGeometry(60, 30, 100, 50) 
+                self.homonbhd9_label.setWordWrap(True) 
             
-            right_layout.addWidget(self.homonbhd9_label)
-            right_layout.addWidget(self.homonbhd9_entry)
+                right_layout.addWidget(self.homonbhd9_label)
+                right_layout.addWidget(self.homonbhd9_entry)
             
-            self.submit_neighbors_label = QLabel(
-                "If all white boxes are the same lc as the center, click button below")
-            self.submit_neighbors_label.setGeometry(60, 40, 100, 50) 
-            self.submit_neighbors_label.setWordWrap(True) 
+                self.submit_neighbors_label = QLabel(
+                    "If all white boxes are the same lc as the center, click button below")
+                self.submit_neighbors_label.setGeometry(60, 40, 100, 50) 
+                self.submit_neighbors_label.setWordWrap(True) 
             
-            right_layout.addWidget(self.submit_neighbors_label)
-            submit_neighborhood_button = QPushButton("submit neighborhood")
-            submit_neighborhood_button.clicked.connect(self.submit_neighborhood)
-            right_layout.addWidget(submit_neighborhood_button)
-            blanklabel2 = QLabel("   ")
-            right_layout.addWidget(blanklabel2)
-            blanklabel3 = QLabel("   ")
-            right_layout.addWidget(blanklabel3)
-            mid_layout.addLayout(right_layout)
+                right_layout.addWidget(self.submit_neighbors_label)
+                submit_neighborhood_button = QPushButton("submit neighborhood")
+                submit_neighborhood_button.clicked.connect(self.submit_neighborhood)
+                right_layout.addWidget(submit_neighborhood_button)
+                blanklabel2 = QLabel("   ")
+                right_layout.addWidget(blanklabel2)
+                blanklabel3 = QLabel("   ")
+                right_layout.addWidget(blanklabel3)
+                mid_layout.addLayout(right_layout)
             
-            #right_spacer = QSpacerItem(100,40,QSizePolicy.Minimum,QSizePolicy.Expanding)
-            #mid_layout.addItem(right_spacer)
+                #right_spacer = QSpacerItem(100,40,QSizePolicy.Minimum,QSizePolicy.Expanding)
+                #mid_layout.addItem(right_spacer)
             
-            main_layout.addLayout(mid_layout)
+                main_layout.addLayout(mid_layout)
+            
             main_layout_foot = QFormLayout()
             
-            self.stability_entry = QComboBox()
-            self.stability_entry.addItems(["--","c - true change", "s - stable", "of - seasonal fluc.", 
+            if entry_lev > 2:
+                self.stability_entry = QComboBox()
+                self.stability_entry.addItems(["--","c - true change", "s - stable", "of - seasonal fluc.", 
                                      "rf - regular fluc. (tides)", "pi - positional instability"])
-            main_layout_foot.addRow(QLabel("stability note"), self.stability_entry)
-            self.state_entry = QComboBox()
-            self.state_entry.addItems(["--","Bare","Young","Mature","Harvest","Burnt","Flooded","Fallowed","Deciduous-partial","Deciduous-full"])
-            main_layout_foot.addRow(QLabel("current state"), self.state_entry)
+                main_layout_foot.addRow(QLabel("stability note"), self.stability_entry)
+                self.state_entry = QComboBox()
+                self.state_entry.addItems(["--","Bare","Young","Mature","Harvest","Burnt","Flooded","Fallowed","Deciduous-partial","Deciduous-full"])
+                main_layout_foot.addRow(QLabel("current state"), self.state_entry)
+                
             self.notes_entry = QLineEdit()
             main_layout_foot.addRow(QLabel("Notes"), self.notes_entry)
             main_layout.addLayout(main_layout_foot)
+            
             self.model = QSqlRelationalTableModel(db=db)
             self.model.setTable('PixelVerification')
-            
+                                                  
             ## setting up relations with LC5 and LC tables so that text is seen but ints are stored
             lc5_col = self.model.fieldIndex('LC5') # column of main table in which LC5 variable is stored
             self.model.setRelation(lc5_col, QSqlRelation('LC5','LC5id','LC5type')) # (table, id to store, value to show)
             self.lc_gen_relmodel = self.model.relationModel(lc5_col)
             self.lc_gen_picker.setModel(self.lc_gen_relmodel)
             self.lc_gen_picker.setModelColumn(self.lc_gen_relmodel.fieldIndex('LC5type'))
-            self.lc_gen_picker.activated.connect(self.update_lc_choices)
-            
+            self.lc_gen_picker.activated.connect(self.update_lc_choices) 
+                    
             lc_col = self.model.fieldIndex('LC') # column of main table in which LC variable is stored 
-            self.model.setRelation(lc_col, QSqlRelation('LC','LC_UNQ','USE_NAME'))  # (table, id to store, value to show)
+            if entry_lev == 1:
+                self.model.setRelation(lc_col, QSqlRelation('LC_simp','LC_UNQ','USE_NAME'))  # (table, id to store, value to show)
+            else:   
+                self.model.setRelation(lc_col, QSqlRelation('LC','LC_UNQ','USE_NAME'))  # (table, id to store, value to show)
             self.lc_detail_relmodel = self.model.relationModel(lc_col)
             self.lc_detail_picker.setModel(self.lc_detail_relmodel)
-            self.lc_detail_picker.setModelColumn(self.lc_detail_relmodel.fieldIndex('USE_NAME'))
+            self.lc_detail_picker.setModelColumn(self.lc_detail_relmodel.fieldIndex('USE_NAME'))   
             self.lc_detail_picker.activated.connect(self.update_lc5_choices)
                   
             #self.model.setEditStrategy(QSqlRelationalTableModel.OnManualSubmit)
@@ -292,27 +324,32 @@ def open_obs_ui(local_db_path):
             
             self.mapper.addMapping(self.lc_gen_picker, lc5_col)
             self.mapper.addMapping(self.lc_detail_picker, lc_col)
-            self.mapper.addMapping(self.homonbhd9_entry, 7)
-            self.mapper.addMapping(self.forestprox_entry, 8)
-            self.mapper.addMapping(self.waterprox_entry, 9)
-            self.mapper.addMapping(self.percenttree_entry, 10)
-            self.mapper.addMapping(self.built_entry, 11)
-            self.mapper.addMapping(self.bare_entry, 12)
-            self.mapper.addMapping(self.water_entry, 13)
-            self.mapper.addMapping(self.cropmono_entry, 14)
-            self.mapper.addMapping(self.cropmix_entry, 15)
-            self.mapper.addMapping(self.cropmed_entry, 16)
-            self.mapper.addMapping(self.grass_entry, 17)
-            self.mapper.addMapping(self.dead_entry, 18)
-            self.mapper.addMapping(self.medveg_entry, 19)
-            self.mapper.addMapping(self.treeplant0_entry, 20)
-            self.mapper.addMapping(self.highveg_entry, 21)
-            self.mapper.addMapping(self.treeplant_entry, 22)
-            self.mapper.addMapping(self.forest_entry, 23)
-            self.mapper.addMapping(self.age_entry, 24)
-            self.mapper.addMapping(self.stability_entry, 25)
-            self.mapper.addMapping(self.state_entry, 26)
+            
+            if entry_lev > 2:   
+                self.mapper.addMapping(self.forestprox_entry, 8)
+                self.mapper.addMapping(self.waterprox_entry, 9)
+                self.mapper.addMapping(self.percenttree_entry, 10)
+                
+                self.mapper.addMapping(self.homonbhd9_entry, 7)                                      
+                self.mapper.addMapping(self.built_entry, 11)
+                self.mapper.addMapping(self.bare_entry, 12)
+                self.mapper.addMapping(self.water_entry, 13)
+                self.mapper.addMapping(self.cropmono_entry, 14)
+                self.mapper.addMapping(self.cropmix_entry, 15)
+                self.mapper.addMapping(self.cropmed_entry, 16)
+                self.mapper.addMapping(self.grass_entry, 17)
+                self.mapper.addMapping(self.dead_entry, 18)
+                self.mapper.addMapping(self.medveg_entry, 19)
+                self.mapper.addMapping(self.treeplant0_entry, 20)
+                self.mapper.addMapping(self.highveg_entry, 21)
+                self.mapper.addMapping(self.treeplant_entry, 22)
+                self.mapper.addMapping(self.forest_entry, 23)
+                self.mapper.addMapping(self.age_entry, 24)    
+                self.mapper.addMapping(self.stability_entry, 25)
+                self.mapper.addMapping(self.state_entry, 26)
+            
             self.mapper.addMapping(self.notes_entry, 27)
+            self.mapper.addMapping(self.entry_lev_info, 28)
             
             self.model.select()
             ## Add the following two lines to allow form to view past record 255
@@ -321,7 +358,6 @@ def open_obs_ui(local_db_path):
                 self.model.fetchMore()
             self.mapper.toLast()
            
-
             self.setMinimumSize(QSize(250, 600))
             
             controls = QHBoxLayout()
@@ -407,17 +443,18 @@ def open_obs_ui(local_db_path):
                 self.changed_neighbors.append(pid_qry.value(0))
         
         def color_neighborhood(self):
-            ## Color cells that have been done in neighborhood for same pid0 and date:
-            for n, o in self.neighbors.items():
-                o.set_color('white')
-            self.get_neighborhood_info()
-            #print(self.changed_neighbors) 
-            changed_pid1s = [k.split('_')[1] for k in self.changed_neighbors] 
-            for n, o in self.neighbors.items(): 
-                if n.split('_')[1] in changed_pid1s:
-                    o.set_color('gray')
-                if n.split('_')[1] == self.pid_info.text().split('_')[1]:
-                    o.set_color('yellow')
+            if entry_lev > 2:
+                ## Color cells that have been done in neighborhood for same pid0 and date:
+                for n, o in self.neighbors.items():
+                    o.set_color('white')
+                self.get_neighborhood_info()
+                #print(self.changed_neighbors) 
+                changed_pid1s = [k.split('_')[1] for k in self.changed_neighbors] 
+                for n, o in self.neighbors.items(): 
+                    if n.split('_')[1] in changed_pid1s:
+                        o.set_color('gray')
+                    if n.split('_')[1] == self.pid_info.text().split('_')[1]:
+                        o.set_color('yellow')
                    
         def update_record(self):
             ## This just saves edits. Does not copy or move on from record, so no data checks yet.
@@ -450,18 +487,19 @@ def open_obs_ui(local_db_path):
                 add_query = QSqlQuery()
                 
                 if dt: 
-                    add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC, imgDate)"
-                          "VALUES( ?, ?, ?, ?, ?, ?)")
-                    add_query.bindValue(5, dt)
+                    add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC, entry_lev, imgDate)"
+                          "VALUES( ?, ?, ?, ?, ?, ?, ?)")
+                    add_query.bindValue(6, dt)
                 else:
-                    add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC)"
-                          "VALUES( ?, ?, ?, ?, ?)")
+                    add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC, entry_lev)"
+                          "VALUES( ?, ?, ?, ?, ?, ?)")
                     
                 add_query.bindValue(0, pidx)
                 add_query.bindValue(1, pid0)
                 add_query.bindValue(2, pid1)
                 add_query.bindValue(3, 0)
                 add_query.bindValue(4, 0)
+                add_query.bindValue(5, entry_lev)
                 add_query.exec()
                 self.mapper.submit()
                 self.model.select() 
@@ -563,7 +601,7 @@ def open_obs_ui(local_db_path):
                 
                     return False
             
-                elif self.withinpix_homo.isChecked() == True:
+                elif entry_lev > 2 and self.withinpix_homo.isChecked() == True:
                     ## Check if Land cover %s sum to 100:
                     per_built = self.built_entry.text()
                     per_bare = self.bare_entry.text()
@@ -603,13 +641,13 @@ def open_obs_ui(local_db_path):
         
         @QtCore.pyqtSlot(int)
 
-        def inlude_exclude_withinpix_info(self):
+        def include_exclude_withinpix_info(self):
             if self.withinpix_homo.isChecked() == False:
-                print(f'box is unchecked')
+                print(f'within pix info is not required')
         
-        def inlude_exclude_neighborhood_info(self):
+        def include_exclude_neighborhood_info(self):
             if self.neighborhood_homo.isChecked() == False:
-                print(f'box is unchecked')
+                print(f'neighborhood info is not required')
         
         def update_lc_selection(self):
             ## Not working
@@ -644,7 +682,7 @@ def open_obs_ui(local_db_path):
             '''
             enter 100 in corresponding field if pixel is marked as pure
             '''
-            if self.purepix.isChecked() == True:
+            if entry_lev > 2 and self.purepix.isChecked() == True:
                 lc = str(self.lc_detail_picker.currentText())
                 if lc == 'NoVeg_Bare':
                     self.bare_entry.setText('100')
@@ -703,13 +741,14 @@ def open_obs_ui(local_db_path):
                 pid0 = id_query.value(1) + 1
             pid = f"{pid0}_0"
             add_query = QSqlQuery()
-            add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC)"
-                          "VALUES( ?, ?, ?, ?, ?)")
+            add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC, entry_lev)"
+                          "VALUES( ?, ?, ?, ?, ?, ?)")
             add_query.bindValue(0, pid)
             add_query.bindValue(1, pid0)
             add_query.bindValue(2, 0)
             add_query.bindValue(3, 0)
             add_query.bindValue(4, 0)
+            add_query.bindValue(5, entry_lev)
             add_query.exec()
             self.mapper.submit()
             self.model.select() 
@@ -730,7 +769,7 @@ def open_obs_ui(local_db_path):
             if self.check_data() == False:
                 return False   
             else:
-                if self.neighborhood_homo.isChecked() == True:
+                if entry_lev > 2 and self.neighborhood_homo.isChecked() == True:
                     self.get_neighborhood_info
                     if len(self.changed_neighbors) < 9:
                         print(len(self.changed_neighbors))
@@ -757,13 +796,14 @@ def open_obs_ui(local_db_path):
                     found_next = True
                     pid = f"{i}_0"
                     add_query = QSqlQuery()
-                    add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC)"
-                          "VALUES( ?, ?, ?, ?, ?)")
+                    add_query.prepare("INSERT INTO PixelVerification (PID, PID0, PID1, LC5, LC, entry_lev)"
+                          "VALUES( ?, ?, ?, ?, ?, ?)")
                     add_query.bindValue(0, pid)
                     add_query.bindValue(1, i)
                     add_query.bindValue(2, 0)
                     add_query.bindValue(3, 0)
                     add_query.bindValue(4, 0)
+                    add_query.bindValue(5, entry_lev)
                     add_query.exec()
                     self.mapper.submit()
                     self.model.select() 

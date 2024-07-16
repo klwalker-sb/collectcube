@@ -64,7 +64,29 @@ def make_LC_table_from_lut(lut, local_db_path, treat_existing):
                  }                
                 ) 
     con.close()
+
+def make_simp_LC_table(lut, local_db_path, keep_unqs, treat_existing):
+    if isinstance(lut, pd.DataFrame):
+        lcdf = lut[['LC_UNQ','LC5', 'LC5_name','LC25','USE_NAME']]
+    else: 
+        lcdf = pd.read_csv(lut, usecols=['LC_UNQ','LC5','LC5_name','LC25','USE_NAME'])
     
+    lcdf_filtered = lcdf[lcdf['LC_UNQ'].isin(keep_unqs)]
+    
+    with sqlite3.connect(local_db_path) as con:
+    
+        lcdf_filtered.to_sql('LC_simp', con=con, schema='public', if_exists=treat_existing, index = False, 
+                 dtype= {
+                    'LC_UNQ': 'INTEGER PRIMARY KEY',
+                    'USE_NAME' : 'TEXT',
+                    'LC5' : 'INTEGER',
+                    'LC5_name' : 'TEXT',
+                    'LC25' : 'INTEGER'
+                 }                
+                ) 
+    con.close()
+        
+        
 def make_main_support_tables(engine):
     metadata = MetaData()
     with engine.connect() as conn:
@@ -104,7 +126,8 @@ def make_main_support_tables(engine):
             Column('Age', Text()),
             Column('Stability', Text()),
             Column('State', Text()),
-            Column('Notes', Text(255))
+            Column('Notes', Text(255)),
+            Column('entry_lev', Integer())
                 )
 
         metadata.create_all(conn, checkfirst=True)
@@ -182,10 +205,10 @@ def get_max_id_in_db(db_path,extra_pix=None):
 def check_table(local_db_path,tablex):
     sql_db_path = 'sqlite:///' + local_db_path
     engine = create_engine(sql_db_path, echo=False)
-    with engine.connect() as conn:
+    with engine.connect() as cnx:
         df = pd.read_sql_table(tablex, con=cnx)
         print(df.tail())
-    conn.close()
+    cnx.close()
 
     return df
 
