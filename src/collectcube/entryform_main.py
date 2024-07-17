@@ -525,15 +525,23 @@ def open_obs_ui(local_db_path, entry_lev):
                     msg.setIcon(QMessageBox.Warning)
                     msg.setText("pid format needs to be number or number_number")
                     msg.exec_()
-                
+        
+        def get_row_of_record(self, rec_match):
+            rec = self.model.fieldIndex('recID') 
+            for row in range (self.model.rowCount()):
+                data = self.model.data(self.model.createIndex(row,rec))
+                if data == rec_match:
+                    return row
+            return -1
+
         def goto_record(self,pid,dt=None):
             #print(pid)
             # pid is a string, either entered as a single number(pid0) or as full pid(pid0_pid1)
             if dt:
-                pid_qry = QSqlQuery("SELECT * from PixelVerification where PID = ? AND imgDate=?")
+                pid_qry = QSqlQuery("SELECT rowid, recID from PixelVerification where PID = ? AND imgDate=?")
                 pid_qry.bindValue(1, dt)
             else:
-                pid_qry = QSqlQuery("SELECT * from PixelVerification where PID = ?")
+                pid_qry = QSqlQuery("SELECT rowid, recID from PixelVerification where PID = ?")
                 
             if '_' in pid:
                 pid_qry.bindValue(0, pid)
@@ -544,8 +552,9 @@ def open_obs_ui(local_db_path, entry_lev):
             pid_qry.exec()
             pidmodel = QSqlQueryModel(self)
             pidmodel.setQuery(pid_qry)
-            rec = pidmodel.record(0).value(0)
-            print(rec)
+            rec = pidmodel.record(0).value(1)
+            row = self.get_row_of_record(rec)  # note this seems like an inefficient way to get the row #...
+
             if rec==None: 
                 buttonReply = QMessageBox.question(
                     self, "RECORD DOES NOT EXIST", "Do you want to create new record?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -560,12 +569,12 @@ def open_obs_ui(local_db_path, entry_lev):
             
             else:
                 #print(f'going to rec:{rec}')
-                #while self.model.canFetchMore():
-                #    self.model.fetchMore()
-                #self.reset_filters()
-                #self.mapper.setCurrentIndex(rec) # this works for rowid, not recID
-                self.model.setFilter('recID = {}'.format(rec))
-                self.mapper.toFirst()
+                #pid_qry.seek(rec)  # not working...
+                self.mapper.submit()
+                self.model.select()
+                while self.model.canFetchMore():
+                    self.model.fetchMore() 
+                self.mapper.setCurrentIndex(row)
                 self.color_neighborhood()
                 
         def goto_pid(self):
