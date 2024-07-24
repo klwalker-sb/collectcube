@@ -61,6 +61,8 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     df_post = df_post.merge(min_value, on='PIDi',suffixes=('', '_min'))
     df_post = df_post[df_post['imgDate']==df_post['imgDate_min']].drop('imgDate_min', axis=1)
     df_post = df_post[keep_columns]
+    #df_post = df_post.sort_values('PIDi')
+    #print(df_post)
 
     ## for each PID, get max obs before sample date
     df_pre = df[df['imgDate']<sample_date]
@@ -68,8 +70,10 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     df_pre = df_pre.merge(max_value, on='PIDi',suffixes=('', '_max'))
     df_pre = df_pre[df_pre['imgDate']==df_pre['imgDate_max']].drop('imgDate_max', axis=1)
     df_pre = df_pre[keep_columns]
+    #df_pre = df_pre.sort_values('PIDi')
+    #print(df_pre)
 
-    df_prepost = pd.merge(df_pre,df_post,on='PIDi',how='left',suffixes=('_pre','_post'))
+    df_prepost = pd.merge(df_pre,df_post,on='PIDi',how='outer',suffixes=('_pre','_post'))
     df_prepost['obsgap'] = df_prepost['imgDate_post'] - df_prepost['imgDate_pre']
     df_prepost['change5'] = df_prepost['LC5_post'] - df_prepost['LC5_pre']
     df_prepost['changeLC'] = df_prepost['LC_post'] - df_prepost['LC_pre']
@@ -78,7 +82,9 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     df_prepost['LC5_post'] = df_prepost.apply(lambda x: int(x['LC5_post']),axis=1)
     df_prepost['LC_post'].fillna(-1, inplace=True)
     df_prepost['LC_post'] = df_prepost.apply(lambda x: int(x['LC_post']),axis=1)
-
+    #df_prepost = df_prepost.sort_values('PIDi')
+    #print(df_prepost)
+    
     lut = pd.read_csv(lut)
     lut_keep=['LC_UNQ','Stability']
     lut = lut[lut_keep]
@@ -87,10 +93,32 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
         (x['change5'] == 0) and (pd.Timedelta(x['Stability']*365, unit='d') > x['obsgap'])) else -1, axis=1)
     prepost['LC'] = prepost.apply(lambda x: x['LC_post'] if (
         (x['changeLC'] == 0) and (pd.Timedelta(x['Stability']*365, unit='d') > x['obsgap'])) else -1, axis=1)
+    
+    ## if forest and observed within 8 yrs after date, keep as forest (even if no pre-date obs)
+    prepost['LC5'] = prepost.apply(lambda x: 70 if (x['LC_post']>=70) and (x['LC_post']<90) and
+                                   (x['imgDate_post']-sample_date < pd.Timedelta(8*365, unit='d')) else x['LC5'], axis=1)    
+    prepost['LC'] = prepost.apply(lambda x: x['LC_post'] if (x['LC_post']>=70) and (x['LC_post']<90) and
+                                   (x['imgDate_post']-sample_date < pd.Timedelta(8*365, unit='d')) else x['LC'], axis=1)
+     
+    ## if trees and observed within 5 yrs after date, keep as forest (even if no pre-date obs)
+    prepost['LC5'] = prepost.apply(lambda x: 70 if  (x['LC_post']==65) and
+                                  (x['imgDate_post']-sample_date < pd.Timedelta(5*365, unit='d')) else x['LC5'], axis=1) 
+    prepost['LC'] = prepost.apply(lambda x: x['LC_post'] if  (x['LC_post']==65) and
+                                   (x['imgDate_post']-sample_date < pd.Timedelta(5*365, unit='d')) else x['LC'], axis=1) 
+    
+    ## if noCrop and observed within 3 yrs after date, keep as noCrop (even if no pre-date obs)
+    prepost['LC5'] = prepost.apply(lambda x: 99 if  (x['LC_post']==98) and
+                                  (x['imgDate_post']-sample_date < pd.Timedelta(5*365, unit='d')) else x['LC5'], axis=1) 
+    prepost['LC'] = prepost.apply(lambda x: x['LC_post'] if  (x['LC_post']==98) and
+                                   (x['imgDate_post']-sample_date < pd.Timedelta(5*365, unit='d')) else x['LC'], axis=1)
+   
+    ##TODO: add age and planted forest calcs
+    ##TODO: add regrowth
     prepost=prepost[prepost['LC']>0]
     prepost['obs_type'] = 'indirect_GE'
-    prepost['recID'] = prepost.apply(lambda x: x['recID_pre'] 
-                                     if sample_date-x['imgDate_pre'] < x['imgDate_post']-sample_date else x['recID_post'], axis=1)   
+    prepost['imgDate_pre'].fillna(value=pd.Timestamp('1900-01-01'))
+    prepost['recID'] = prepost.apply(lambda x: x['recID_pre'] if
+                                     (sample_date-x['imgDate_pre'] < x['imgDate_post']-sample_date) else x['recID_post'], axis=1)   
 
     prepost_cols=['recID','LC','LC5','obs_type']
     df_cols = df.columns.difference(prepost_cols).tolist()

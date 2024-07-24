@@ -35,11 +35,11 @@ LC_UNQ,USE_NAME,LC5_name,LC5,LC25,LC25_name,LC3,LC3_name,LC4,LC4_name,LC2,LC2_na
 56,TreePlant-young,HighVeg,50,60,TreePlant,0,nocrop,0,nocrop,0,nocrop,10,Not crop,2,1-2 yrs
 58,Burnt-woody,HighVeg,50,58,Burnt-woody,0,nocrop,0,nocrop,0,nocrop,10,Not crop,0,woody veg (shrub or trees that is burnt & browned during the year but does not appear cleared
 60,TreePlant,Trees,70,60,TreePlant,0,nocrop,3,tree,0,nocrop,10,Not crop,5,age not specified (better to use age cat if known)
-65,Trees-Open,Trees,70,65,Trees-disturbed,0,nocrop,3,tree,0,nocrop,10,Not crop,10,Mature trees with gaps (>70% closed canopy) or <10m from edge
+65,Trees-Open,Trees,70,65,Trees-disturbed,0,nocrop,3,tree,0,nocrop,10,Not crop,20,Mature trees with gaps (>70% closed canopy) or <10m from edge
 66,TreePlant-mature,Trees,70,60,TreePlant,0,nocrop,3,tree,0,nocrop,10,Not crop,5,>=3 years
-67,Trees-Forest_decid,Trees,70,80,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,10,">70% crown cover when green, but has deciduous period (~sept)"
-68,Trees-Forest_palm,Trees,70,68,Trees-Forest_palm,0,nocrop,3,tree,0,nocrop,10,Not crop,10,>70% canopy closure of homogenous palm trees or other forest with prominent palms
-70,Trees-Wetland,Trees,70,70,Trees-Wetland,0,nocrop,3,tree,0,nocrop,10,Not crop,10,Mangrove
-80,Trees-Forest,Trees,70,80,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,10,">90% canopy closure of trees with large, heterogenous crowns"
+67,Trees-Forest_decid,Trees,70,80,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,20,">70% crown cover when green, but has deciduous period (~sept)"
+68,Trees-Forest_palm,Trees,70,68,Trees-Forest_palm,0,nocrop,3,tree,0,nocrop,10,Not crop,20,>70% canopy closure of homogenous palm trees or other forest with prominent palms
+70,Trees-Wetland,Trees,70,70,Trees-Wetland,0,nocrop,3,tree,0,nocrop,10,Not crop,20,Mangrove
+80,Trees-Forest,Trees,70,80,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,20,">90% canopy closure of trees with large, heterogenous crowns"
 99,unknown,unknown,99,99,unknown,99,unknown,99,unknown,99,unknown,99,unknown,0,no idea -- this is a placeholder for data checking and should be removed for all classification
-98,N_NoCrop,unknown,99,98,NoCrop,0,nocrop,0,nocrop,0,nocrop,98,Not crop,10,for simple data checking exercises where only crop/noCrop is needed
+98,N_NoCrop,unknown,99,98,NoCrop,0,nocrop,0,nocrop,0,nocrop,98,Not crop,20,for simple data checking exercises where only crop/noCrop is needed
