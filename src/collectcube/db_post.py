@@ -46,9 +46,9 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     
     if sample_cats not in ['crop_type','LC25']:
         if sample_cats not in ['crop4']:
-            df['LC'] = df.apply(lambda x: 30 if ((x['LC']>=30) & (x['LC']<50)) else x['LC'],axis=1)
+            df['LC'] = df.apply(lambda x: 30 if ((x['LC']>=30) & (x['LC']<48)) else x['LC'],axis=1)
             df['LC'] = df.apply(lambda x: 80 if ((x['LC']>=60) & (x['LC']<90)) else x['LC'],axis=1)
-            df['LC'] = df.apply(lambda x: 98 if ((x['LC']<30) | ((x['LC']>=50) & (x['LC']<60))) else x['LC'],axis=1)
+            df['LC'] = df.apply(lambda x: 98 if ((x['LC']<30) | ((x['LC']>=48) & (x['LC']<60))) else x['LC'],axis=1)
 
     # TODO: incorporate pixel purity
 
@@ -112,6 +112,7 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     prepost['LC'] = prepost.apply(lambda x: x['LC_post'] if  (x['LC_post']==98) and
                                    (x['imgDate_post']-sample_date < pd.Timedelta(5*365, unit='d')) else x['LC'], axis=1)
    
+    prepost.to_csv('C:/GISprojects/ParaguayValidation/smDistricts/tmp_check.csv')
     ##TODO: add age and planted forest calcs
     ##TODO: add regrowth
     prepost=prepost[prepost['LC']>0]

@@ -94,9 +94,9 @@ def open_obs_ui(local_db_path, entry_lev):
             ## TODO: set checked = 1 for pixel with same PID when form is closed (relation table)
             self.pid_info = QLineEdit()
             main_layout_head1_left.addRow(QLabel("PID"), self.pid_info)
-            #self.pid0_entry = QLineEdit()
+            self.pid0_entry = QLineEdit()
             #main_layout_head1_left.addRow(QLabel("PID0"), self.pid0_entry)
-            self.recid_info.setDisabled(True)
+            #self.recid_info.setDisabled(True)
             
             self.imgdate_entry = QLineEdit()
             self.imgdate_entry.setStyleSheet("QLineEdit{background-color:lightyellow}")

@@ -22,7 +22,7 @@ LC_UNQ,USE_NAME,LC5_name,LC5,LC25,LC25_name,LC3,LC3_name,LC4,LC4_name,LC2,LC2_na
 34,Crops-Mandioca,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
 35,M_Crops-mix,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,intercropping with each crop <30m across
 36,Crops-Peanuts,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
-37,Crops-Rice,LowVeg,20,37,Crops-Rice,1,crop,1,crop,1,crop,37,Rice,5,
+37,Crops-Rice,LowVeg,20,37,Crops-Rice,1,crop,1,crop,1,crop,37,Rice,2,
 38,Crops-Sugar,LowVeg,20,38,Crops-Sugar,1,crop,1,crop,1,crop,38,Sugar,5,
 40,D_Crop_Med,MedVeg,40,99,unknown,2,medcrop,2,medcrop,1,crop,40,Shrub crops,5,unknown or other shrubby perrenial crops (i.e. vineyards)
 41,Crops-Vineyard,MedVeg,40,41,Crops-Vineyard,2,medcrop,2,medcrop,1,crop,40,Shrub crops,5,
@@ -39,7 +39,7 @@ LC_UNQ,USE_NAME,LC5_name,LC5,LC25,LC25_name,LC3,LC3_name,LC4,LC4_name,LC2,LC2_na
 66,TreePlant-mature,Trees,70,60,TreePlant,0,nocrop,3,tree,0,nocrop,10,Not crop,5,>=3 years
 67,Trees-Forest_decid,Trees,70,80,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,20,">70% crown cover when green, but has deciduous period (~sept)"
 68,Trees-Forest_palm,Trees,70,68,Trees-Forest_palm,0,nocrop,3,tree,0,nocrop,10,Not crop,20,>70% canopy closure of homogenous palm trees or other forest with prominent palms
-70,Trees-Wetland,Trees,70,70,Trees-Wetland,0,nocrop,3,tree,0,nocrop,10,Not crop,20,Mangrove
+70,Trees-Wetland,Trees,70,70,Trees-Wetland,0,nocrop,3,tree,0,nocrop,10,Not crop,20,Mangrove or mixed tree/water (>50% tree)
 80,Trees-Forest,Trees,70,80,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,20,">90% canopy closure of trees with large, heterogenous crowns"
 99,unknown,unknown,99,99,unknown,99,unknown,99,unknown,99,unknown,99,unknown,0,no idea -- this is a placeholder for data checking and should be removed for all classification
 98,N_NoCrop,unknown,99,98,NoCrop,0,nocrop,0,nocrop,0,nocrop,98,Not crop,20,for simple data checking exercises where only crop/noCrop is needed
