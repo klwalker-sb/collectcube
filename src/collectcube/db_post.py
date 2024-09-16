@@ -44,25 +44,22 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     df = open_data_records_sqlachemy(local_db_path)
     df['obs_type']='direct_GE'
     
+    df['LC_UNQ'] = df['LC']
     if sample_cats not in ['crop_type','LC25']:
         if sample_cats not in ['crop4']:
             df['LC'] = df.apply(lambda x: 30 if ((x['LC']>=30) & (x['LC']<48)) else x['LC'],axis=1)
             df['LC'] = df.apply(lambda x: 80 if ((x['LC']>=60) & (x['LC']<90)) else x['LC'],axis=1)
             df['LC'] = df.apply(lambda x: 98 if ((x['LC']<30) | ((x['LC']>=48) & (x['LC']<60))) else x['LC'],axis=1)
 
-    # TODO: incorporate pixel purity
-
     df_direct = df[(df['imgDate']>f'{target_yr-1}-06-01')&(df['imgDate']<f'{target_yr}-06-01')]
-
-    keep_columns = ['recID','PIDi','LC5','LC','Stability','imgDate']
+    
+    keep_columns = ['recID','PIDi','LC5','LC','LC_UNQ','HOMONBHD9', 'Stability','imgDate']
     ## for each PID, get min obs after sample date
     df_post = df[df['imgDate']>=sample_date]
     min_value = df_post.groupby('PIDi')['imgDate'].min()
     df_post = df_post.merge(min_value, on='PIDi',suffixes=('', '_min'))
     df_post = df_post[df_post['imgDate']==df_post['imgDate_min']].drop('imgDate_min', axis=1)
     df_post = df_post[keep_columns]
-    #df_post = df_post.sort_values('PIDi')
-    #print(df_post)
 
     ## for each PID, get max obs before sample date
     df_pre = df[df['imgDate']<sample_date]
@@ -70,8 +67,6 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     df_pre = df_pre.merge(max_value, on='PIDi',suffixes=('', '_max'))
     df_pre = df_pre[df_pre['imgDate']==df_pre['imgDate_max']].drop('imgDate_max', axis=1)
     df_pre = df_pre[keep_columns]
-    #df_pre = df_pre.sort_values('PIDi')
-    #print(df_pre)
 
     df_prepost = pd.merge(df_pre,df_post,on='PIDi',how='outer',suffixes=('_pre','_post'))
     df_prepost['obsgap'] = df_prepost['imgDate_post'] - df_prepost['imgDate_pre']
@@ -82,8 +77,6 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     df_prepost['LC5_post'] = df_prepost.apply(lambda x: int(x['LC5_post']),axis=1)
     df_prepost['LC_post'].fillna(-1, inplace=True)
     df_prepost['LC_post'] = df_prepost.apply(lambda x: int(x['LC_post']),axis=1)
-    #df_prepost = df_prepost.sort_values('PIDi')
-    #print(df_prepost)
     
     lut = pd.read_csv(lut)
     lut_keep=['LC_UNQ','Stability']
@@ -112,9 +105,10 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     prepost['LC'] = prepost.apply(lambda x: x['LC_post'] if  (x['LC_post']==98) and
                                    (x['imgDate_post']-sample_date < pd.Timedelta(5*365, unit='d')) else x['LC'], axis=1)
    
-    prepost.to_csv('C:/GISprojects/ParaguayValidation/smDistricts/tmp_check.csv')
     ##TODO: add age and planted forest calcs
     ##TODO: add regrowth
+    # TODO: incorporate pixel purity (HOMONBHD9)
+    
     prepost=prepost[prepost['LC']>0]
     prepost['obs_type'] = 'indirect_GE'
     prepost['imgDate_pre'].fillna(value=pd.Timestamp('1900-01-01'))
@@ -129,7 +123,9 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
     all_obs = all_obs.sort_values('PIDi')
     all_obs.drop_duplicates('PIDi', inplace=True)
     print(f'there are {all_obs.shape[0]} observations for selected date')
-    center_obs = all_obs[all_obs['PID1']==0]
-    print(f'there are {center_obs.shape[0]} center pixel observations')
-           
-    return all_obs
+    if sample_type == 'validation' or sample_type == 'area_est':
+        center_obs = all_obs[all_obs['PID1']==0]
+        print(f'there are {center_obs.shape[0]} center pixel observations')
+        return center_obs
+    else:
+        return all_obs
