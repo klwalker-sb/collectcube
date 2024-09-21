@@ -166,6 +166,8 @@ def open_obs_ui(local_db_path, entry_lev):
                 self.purepix.setCheckState(0)
                 self.purepix.stateChanged.connect(self.populate_pure_percentage)
             
+                self.fwidth_entry = QLineEdit()
+                form.addRow(QLabel("FIELD WIDTH"), self.fwidth_entry)
                 self.built_entry = QLineEdit()
                 form.addRow(QLabel("% BUILT"), self.built_entry)
                 self.bare_entry = QLineEdit()
@@ -284,6 +286,8 @@ def open_obs_ui(local_db_path, entry_lev):
                 self.state_entry.addItems(["--","Bare","Young","Mature","Harvest","Burnt","Flooded","Fallowed","Deciduous-partial","Deciduous-full"])
                 main_layout_foot.addRow(QLabel("current state"), self.state_entry)
                 
+            self.source_entry = QLineEdit()
+            main_layout_foot.addRow(QLabel("obs_source"), self.source_entry)            
             self.notes_entry = QLineEdit()
             main_layout_foot.addRow(QLabel("Notes"), self.notes_entry)
             main_layout.addLayout(main_layout_foot)
@@ -325,7 +329,8 @@ def open_obs_ui(local_db_path, entry_lev):
             self.mapper.addMapping(self.lc_gen_picker, lc5_col)
             self.mapper.addMapping(self.lc_detail_picker, lc_col)
             
-            if entry_lev > 2:   
+            if entry_lev > 2: 
+                self.mapper.addMapping(self.fwidth_entry, 29)
                 self.mapper.addMapping(self.forestprox_entry, 8)
                 self.mapper.addMapping(self.waterprox_entry, 9)
                 self.mapper.addMapping(self.percenttree_entry, 10)
@@ -350,7 +355,8 @@ def open_obs_ui(local_db_path, entry_lev):
             
             self.mapper.addMapping(self.notes_entry, 27)
             self.mapper.addMapping(self.entry_lev_info, 28)
-            
+            self.mapper.addMapping(self.source_entry, 30)
+                            
             self.model.select()
             ## Add the following two lines to allow form to view past record 255
             ##  TODO: implement partial reads to avoid reading full db for everything?

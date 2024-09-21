@@ -37,10 +37,13 @@ def make_pixel_table_in_db(pixdf, local_db_path, treat_existing):
                     'cent_Y' : 'REAL',
                     'ransamp' : 'INTEGER',
                     'sampgroup' : 'TEXT',
-                    'checked' : 'INTEGER'
+                    'checked' : 'INTEGER',
+                    'rand' : 'REAL',
+                    'rand2' : 'REAL'
                  }                
                 ) 
     con.close()
+    
     
 def make_LC_table_from_lut(lut, local_db_path, treat_existing):
     '''
@@ -97,7 +100,7 @@ def make_main_support_tables(engine):
             Column('LC5id', Integer(), primary_key=True),
             Column('LC5type', Text()) 
                   )
-              
+        
         PixVar = Table('PixelVerification', metadata,
             Column('recID', Integer(), primary_key=True, autoincrement=True),
             Column('PID', Text(), ForeignKey(pix_table.c.PID), nullable=False),
@@ -127,11 +130,13 @@ def make_main_support_tables(engine):
             Column('Stability', Text()),
             Column('State', Text()),
             Column('Notes', Text(255)),
-            Column('entry_lev', Integer())
+            Column('entry_lev', Integer()),
+            Column('FieldWidth',Integer()),
+            Column('source', Text(255))
                 )
 
         metadata.create_all(conn, checkfirst=True)
-        print('added LC5 and PixVar tables to db')
+        print('added LC5 and empty PixVar table to db')
         
 def populate_LC5_table(engine):
     lc5_table = Table('LC5', MetaData(), autoload_with=engine)

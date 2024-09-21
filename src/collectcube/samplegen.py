@@ -151,8 +151,10 @@ def get_full_point_file(pts_in, pt_file_out, res, lastpt=-1, write_pts=False):
         pts = pts_in
     else:
         pts = gpd.read_file(pts_in)
-        
-    pts['PID'] = pts.apply(lambda x: f'{int(x.name)+lastpt+1:07d}_0', axis=1)
+    
+    if 'PID' not in pts.columns:
+        pts['PID'] = pts.apply(lambda x: f'{int(x.name)+lastpt+1:07d}_0', axis=1)
+    
     pts['Center'] = 1
     newdfs=[]
     for index,row in pts.iterrows():
@@ -234,4 +236,4 @@ def make_pixel_table(pts_in,samp_group=None):
     else:
         pts2['sampgroup'] = ""
 
-    return(pts2)
+    return pts2
