@@ -93,6 +93,7 @@ def move_points_to_pixel_centroids(ptgdf, ref_ras, write_pts=False, ptsout=None)
     print('ref_ras has crs:{}'.format(src.crs))
     #print(src.transform)
     shifted_pts = []
+    ids=[]
     
     if ptgdf.crs != src.crs:
         ptgdf = ptgdf.to_crs(src.crs)
@@ -103,10 +104,16 @@ def move_points_to_pixel_centroids(ptgdf, ref_ras, write_pts=False, ptsout=None)
         row = int((y_origin - point[1] ) / pixel_height)
         pixel_centroid = Point(x_origin + (pixel_width*col) + (pixel_width/2), y_origin - (pixel_height*row) - (pixel_height/2))
         shifted_pts.append(pixel_centroid)
+        if 'PID0' in ptgdf.columns:
+            ids.append(ptgdf.at[index, 'PID0'])
         
     #gs_shift = gpd.GeoSeries(shifted_pts)
     ptgdf_shift = gpd.GeoDataFrame(geometry=gpd.GeoSeries(shifted_pts),crs=src.crs)
-
+    if 'PID0' in ptgdf.columns:
+        id_ser = pd.Series(ids, name='PID0') 
+        ptgdf_shift = pd.concat([ptgdf_shift,id_ser],axis=1)
+        ptgdf_shift = ptgdf_shift.set_index('PID0')
+    
     if write_pts==True:
         ptgdf_shift.to_file(ptsout, driver='ESRI Shapefile')
         
@@ -153,7 +160,10 @@ def get_full_point_file(pts_in, pt_file_out, res, lastpt=-1, write_pts=False):
         pts = gpd.read_file(pts_in)
     
     if 'PID' not in pts.columns:
-        pts['PID'] = pts.apply(lambda x: f'{int(x.name)+lastpt+1:07d}_0', axis=1)
+        if 'PID0' in pts.columns:
+            pts['PID'] = pts.apply(lambda x: f'{x.PID0:07d}_0', axis=1)
+        else:
+            pts['PID'] = pts.apply(lambda x: f'{int(x.name)+lastpt+1:07d}_0', axis=1)
     
     pts['Center'] = 1
     newdfs=[]
