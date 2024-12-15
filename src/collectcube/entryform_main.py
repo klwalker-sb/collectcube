@@ -278,6 +278,33 @@ def open_obs_ui(local_db_path, entry_lev):
             
             main_layout_foot = QFormLayout()
             
+            #self.container = QFrame()
+            #self.container.setStyleSheet("background-color: lightgreen")
+            #doubt_bar = QHBoxLayout(self.container)
+            doubt_bar = QHBoxLayout()
+
+            self.doubt1 = QCheckBox(text="crop or not")
+            #form.addRow(QLabel("Doubts:",self.doubt1))
+            self.doubt_lab = QLabel("Doubts") 
+            form.addRow(self.doubt_lab, self.doubt1)  
+            self.doubt_lab.setFont(QFont("Times",weight=QFont.Bold))
+            #self.doubt1.setCheckState(0)
+            self.doubt1.stateChanged.connect(self.flag_doubt1)
+            doubt_bar.addWidget(self.doubt1)
+            
+            self.doubt2 = QCheckBox(text="within LC5 cat")          
+            #self.doubt2.setCheckState(0)
+            self.doubt2.stateChanged.connect(self.flag_doubt2)
+            doubt_bar.addWidget(self.doubt2)
+            
+            self.doubt3 = QCheckBox(text="between LC5 cats")            
+            #self.doubt3.setCheckState(0)
+            self.doubt3.stateChanged.connect(self.flag_doubt3)
+            doubt_bar.addWidget(self.doubt3)
+            
+            #doubt_bar.setSpacing(0) ##TODO fix this
+            main_layout_foot.addRow(doubt_bar)
+            
             if entry_lev > 2:
                 self.stability_entry = QComboBox()
                 self.stability_entry.addItems(["--","c - true change", "s - stable", "of - seasonal fluc.", 
@@ -290,37 +317,12 @@ def open_obs_ui(local_db_path, entry_lev):
                 self.type_entry = QComboBox()
                 self.type_entry.addItems(["--","road","building","ocean","pond","eucalyptus","ag_infrastructure"])
                 ## TODO: finish filling this - or better, make a look up based on LC   
-                main_layout_foot.addRow(QLabel("subtype"), self.type_entry)                        
-                                           
+                main_layout_foot.addRow(QLabel("subtype"), self.type_entry)   
                 
-            #self.container = QFrame()
-            #self.container.setStyleSheet("background-color: lightgreen")
-            #doubt_bar = QHBoxLayout(self.container)
-            doubt_bar = QHBoxLayout()
-
-            self.doubt1 = QCheckBox(text="crop or not")
-            #form.addRow(QLabel("Doubts:",self.doubt1))
-            self.doubt_lab = QLabel("Doubts") 
-            form.addRow(self.doubt_lab, self.doubt1)  
-            self.doubt_lab.setFont(QFont("Times",weight=QFont.Bold))
-            self.doubt1.setCheckState(0)
-            self.doubt1.stateChanged.connect(self.flag_doubt1)
-            doubt_bar.addWidget(self.doubt1)
+            self.source_entry = QComboBox()
+            self.source_entry.addItems(["GE","ground","planet","inferred","assumed","govt_data","owner_records"])
+            main_layout_foot.addRow(QLabel("obs_source"), self.source_entry)
             
-            self.doubt2 = QCheckBox(text="within LC5 cat")          
-            self.doubt2.setCheckState(0)
-            self.doubt2.stateChanged.connect(self.flag_doubt2)
-            doubt_bar.addWidget(self.doubt2)
-            
-            self.doubt3 = QCheckBox(text="between LC5 cats")            
-            self.doubt3.setCheckState(0)
-            self.doubt3.stateChanged.connect(self.flag_doubt3)
-            doubt_bar.addWidget(self.doubt3)
-            
-            doubt_bar.setSpacing(0) ##TODO fix this
-            
-            self.source_entry = QLineEdit()
-            main_layout_foot.addRow(QLabel("obs_source"), self.source_entry)            
             self.notes_entry = QLineEdit()
             main_layout_foot.addRow(QLabel("Notes"), self.notes_entry)
             self.image_entry = QLineEdit()
