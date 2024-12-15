@@ -33,7 +33,8 @@ from PyQt5.QtWidgets import (
     QAbstractSpinBox,
     QWidget,
     QMessageBox,
-    QInputDialog
+    QInputDialog,
+    QFrame
 )
     
 def open_obs_ui(local_db_path, entry_lev):
@@ -167,7 +168,7 @@ def open_obs_ui(local_db_path, entry_lev):
                 self.purepix.stateChanged.connect(self.populate_pure_percentage)
             
                 self.fwidth_entry = QLineEdit()
-                form.addRow(QLabel("FIELD WIDTH"), self.fwidth_entry)
+                form.addRow(QLabel("WIDTH"), self.fwidth_entry)
                 self.built_entry = QLineEdit()
                 form.addRow(QLabel("% BUILT"), self.built_entry)
                 self.bare_entry = QLineEdit()
@@ -283,13 +284,48 @@ def open_obs_ui(local_db_path, entry_lev):
                                      "rf - regular fluc. (tides)", "pi - positional instability"])
                 main_layout_foot.addRow(QLabel("stability note"), self.stability_entry)
                 self.state_entry = QComboBox()
-                self.state_entry.addItems(["--","Bare","Young","Mature","Harvest","Burnt","Flooded","Fallowed","Deciduous-partial","Deciduous-full"])
+                self.state_entry.addItems(["--","bare","burned","burning","covered","dry","fallow","fertilizer",
+                                           "flooded","flowering","harvest","leaf on", "leafoff", "new"])
                 main_layout_foot.addRow(QLabel("current state"), self.state_entry)
+                self.type_entry = QComboBox()
+                self.type_entry.addItems(["--","road","building","ocean","pond","eucalyptus","ag_infrastructure"])
+                ## TODO: finish filling this - or better, make a look up based on LC   
+                main_layout_foot.addRow(QLabel("subtype"), self.type_entry)                        
+                                           
                 
+            #self.container = QFrame()
+            #self.container.setStyleSheet("background-color: lightgreen")
+            #doubt_bar = QHBoxLayout(self.container)
+            doubt_bar = QHBoxLayout()
+
+            self.doubt1 = QCheckBox(text="crop or not")
+            #form.addRow(QLabel("Doubts:",self.doubt1))
+            self.doubt_lab = QLabel("Doubts") 
+            form.addRow(self.doubt_lab, self.doubt1)  
+            self.doubt_lab.setFont(QFont("Times",weight=QFont.Bold))
+            self.doubt1.setCheckState(0)
+            self.doubt1.stateChanged.connect(self.flag_doubt1)
+            doubt_bar.addWidget(self.doubt1)
+            
+            self.doubt2 = QCheckBox(text="within LC5 cat")          
+            self.doubt2.setCheckState(0)
+            self.doubt2.stateChanged.connect(self.flag_doubt2)
+            doubt_bar.addWidget(self.doubt2)
+            
+            self.doubt3 = QCheckBox(text="between LC5 cats")            
+            self.doubt3.setCheckState(0)
+            self.doubt3.stateChanged.connect(self.flag_doubt3)
+            doubt_bar.addWidget(self.doubt3)
+            
+            doubt_bar.setSpacing(0) ##TODO fix this
+            
             self.source_entry = QLineEdit()
             main_layout_foot.addRow(QLabel("obs_source"), self.source_entry)            
             self.notes_entry = QLineEdit()
             main_layout_foot.addRow(QLabel("Notes"), self.notes_entry)
+            self.image_entry = QLineEdit()
+            main_layout_foot.addRow(QLabel("Image_path"), self.image_entry)
+            
             main_layout.addLayout(main_layout_foot)
             
             self.model = QSqlRelationalTableModel(db=db)
@@ -330,7 +366,7 @@ def open_obs_ui(local_db_path, entry_lev):
             self.mapper.addMapping(self.lc_detail_picker, lc_col)
             
             if entry_lev > 2: 
-                self.mapper.addMapping(self.fwidth_entry, 29)
+                self.mapper.addMapping(self.fwidth_entry, 28)
                 self.mapper.addMapping(self.forestprox_entry, 8)
                 self.mapper.addMapping(self.waterprox_entry, 9)
                 self.mapper.addMapping(self.percenttree_entry, 10)
@@ -352,10 +388,15 @@ def open_obs_ui(local_db_path, entry_lev):
                 self.mapper.addMapping(self.age_entry, 24)    
                 self.mapper.addMapping(self.stability_entry, 25)
                 self.mapper.addMapping(self.state_entry, 26)
+                self.mapper.addMapping(self.type_entry, 27)
             
-            self.mapper.addMapping(self.notes_entry, 27)
-            self.mapper.addMapping(self.entry_lev_info, 28)
-            self.mapper.addMapping(self.source_entry, 30)
+            self.mapper.addMapping(self.doubt1, 31)
+            self.mapper.addMapping(self.doubt2, 32)
+            self.mapper.addMapping(self.doubt3, 33)
+            self.mapper.addMapping(self.notes_entry, 29)
+            self.mapper.addMapping(self.entry_lev_info, 30)
+            self.mapper.addMapping(self.source_entry, 34)
+            self.mapper.addMapping(self.image_entry, 35)
                             
             self.model.select()
             ## Add the following two lines to allow form to view past record 255
@@ -692,6 +733,27 @@ def open_obs_ui(local_db_path, entry_lev):
             next_rec = id_qry.value(0) + 1
             
             return next_rec
+        
+        def flag_doubt1(self, checked):
+            if checked:
+                self.doubt1 = 1
+            else:
+                self.doubt1 = 0
+            self.show()
+            
+        def flag_doubt2(self, checked):
+            if checked:
+                self.doubt1 = 1
+            else:
+                self.doubt1 = 0
+            self.show()
+            
+        def flag_doubt3(self, checked):
+            if checked:
+                self.doubt1 = 1
+            else:
+                self.doubt1 = 0
+            self.show()
         
         def populate_pure_percentage(self):
             '''

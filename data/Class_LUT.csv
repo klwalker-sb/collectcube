@@ -1,45 +1,54 @@
-LC_UNQ,USE_NAME,LC5_name,LC5,LC25,LC25_name,LC3,LC3_name,LC4,LC4_name,LC2,LC2_name,LC_crops,LC_crops_name,Stability,Description
-0, ------, ------,0,0, ------,9, ------,9, ------,9, ------,0, ------,0, ------
-1,NoVeg,NoVeg,10,99,unknown,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,"nonvegetated area (unkown if water, bare or built)"
-2,NoVeg_Bare,NoVeg,10,2,NoVeg_Bare,0,nocrop,0,nocrop,0,nocrop,10,Not crop,3,Bare soil/rock/sand throughout the year (NOT part of crop cycle)
-3,NoVeg_Built,NoVeg,10,3,NoVeg_Built,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,
-7,NoVeg_Water,NoVeg,10,7,NoVeg_Water,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,
-9,Mixed-path,NoVeg,10,9,Mixed-path,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,>30% NoVeg_bare/built and >30% LowVeg (and not built or New_plant) 
-10,Cleared,LowVeg,20,10,Cleared,0,nocrop,0,nocrop,0,nocrop,10,Not crop,1,"Med/High vegetation has been cleared witin the year, but no other land use is evident"
-11,TreePlant-new,LowVeg,20,11,NewPlant,0,nocrop,0,nocrop,0,nocrop,10,Not crop,0,<1 year
-12,Grassland-Natural,LowVeg,20,12,Grassland-Natural,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,"natural grassland, dry year-round, <30% tree cover"
-13,Grassland-Managed,LowVeg,20,13,Grassland-Managed,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,"planted grass or managed pasture,  <30% tree cover"
-15,Grassland,LowVeg,20,99,unknown,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,"grass,  <30% tree cover -- unknown if planted or natural"
-17,Grassland-Wet,LowVeg,20,17,Grassland-Wet,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,natural grassland that is flooded at some point in year
-18,Mixed-GrassEdge,LowVeg,20,19,Mixed-VegEdge,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,
-19,Mixed-FieldEdge,LowVeg,20,19,Mixed-VegEdge,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,Mix of Crop_low and other low/med veg at edge of field
-20,LowVeg,LowVeg,20,99,unknown,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,
-23,Crops-horticulture,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,23,Horticulture,5,crops with greenhouse/tarp structure for part of year
-30,L_Crop-Low,LowVeg,20,99,unknown,1,crop,1,crop,1,crop,10,Crops-unknown,5,unknown annual crop
-31,Crops-Soybeans,LowVeg,20,31,Crops-Soybeans,1,crop,1,crop,1,crop,31,Soybeans,5,
-32,Crops-Beans,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
-33,Crops-Corn,LowVeg,20,33,Crops-Corn,1,crop,1,crop,1,crop,33,Corn,5,
-34,Crops-Mandioca,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
-35,M_Crops-mix,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,intercropping with each crop <30m across
-36,Crops-Peanuts,LowVeg,20,35,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
-37,Crops-Rice,LowVeg,20,37,Crops-Rice,1,crop,1,crop,1,crop,37,Rice,2,
-38,Crops-Sugar,LowVeg,20,38,Crops-Sugar,1,crop,1,crop,1,crop,38,Sugar,5,
-40,D_Crop_Med,MedVeg,40,99,unknown,2,medcrop,2,medcrop,1,crop,40,Shrub crops,5,unknown or other shrubby perrenial crops (i.e. vineyards)
-41,Crops-Vineyard,MedVeg,40,41,Crops-Vineyard,2,medcrop,2,medcrop,1,crop,40,Shrub crops,5,
-42,Crops-Yerba-Mate,MedVeg,40,42,Crops-Yerba-Mate,2,medcrop,2,medcrop,1,crop,40,Shrub crops,5,
-43,Crops-Banana,MedVeg,40,43,Crops-Banana,2,medcrop,2,medcrop,1,crop,40,Shrub crops,5,
-45,Crops-Orchard-new,LowVeg,20,99,unknown,1,crop,1,crop,1,crop,45,Tree crops,0,<1 year
-46,Crops-Orchard,MedVeg,40,46,Crops-Orchard,2,medcrop,2,medcrop,1,crop,50,Tree crops,5,
-51,Grass_tree-mix,HighVeg,50,51,Grass_tree-mix,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,Grassland with trees (30-70% closed canopy)
-48,Shrub,MedVeg,40,40,Shrub,0,nocrop,0,nocrop,0,nocrop,10,Not crop,3,natural shrubs / regrowth
-56,TreePlant-young,HighVeg,50,60,TreePlant,0,nocrop,0,nocrop,0,nocrop,10,Not crop,2,1-2 yrs
-58,Burnt-woody,HighVeg,50,58,Burnt-woody,0,nocrop,0,nocrop,0,nocrop,10,Not crop,0,woody veg (shrub or trees that is burnt & browned during the year but does not appear cleared
-60,TreePlant,Trees,70,60,TreePlant,0,nocrop,3,tree,0,nocrop,10,Not crop,5,age not specified (better to use age cat if known)
-65,Trees-Open,Trees,70,65,Trees-disturbed,0,nocrop,3,tree,0,nocrop,10,Not crop,20,Mature trees with gaps (>70% closed canopy) or <10m from edge
-66,TreePlant-mature,Trees,70,60,TreePlant,0,nocrop,3,tree,0,nocrop,10,Not crop,5,>=3 years
-67,Trees-Forest_decid,Trees,70,80,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,20,">70% crown cover when green, but has deciduous period (~sept)"
-68,Trees-Forest_palm,Trees,70,68,Trees-Forest_palm,0,nocrop,3,tree,0,nocrop,10,Not crop,20,>70% canopy closure of homogenous palm trees or other forest with prominent palms
-70,Trees-Wetland,Trees,70,70,Trees-Wetland,0,nocrop,3,tree,0,nocrop,10,Not crop,20,Mangrove or mixed tree/water (>50% tree)
-80,Trees-Forest,Trees,70,80,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,20,">90% canopy closure of trees with large, heterogenous crowns"
-99,unknown,unknown,99,99,unknown,99,unknown,99,unknown,99,unknown,99,unknown,0,no idea -- this is a placeholder for data checking and should be removed for all classification
-98,N_NoCrop,unknown,99,98,NoCrop,0,nocrop,0,nocrop,0,nocrop,98,Not crop,20,for simple data checking exercises where only crop/noCrop is needed
+LC_UNQ,USE_NAME,LC5_name,LC5,LC25,perLC25E,LC25_name,LC3,LC3_name,LC4,LC4_name,LC2,LC2_name,LC_crops,LC_crops_name,Stability,Description
+0, ------, ------,0,0,, ------,9, ------,9, ------,9, ------,0, ------,0, ------
+1,NoVeg,NoVeg,10,99,,unknown,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,"nonvegetated area (unkown if water, bare or built)"
+2,NoVeg_Bare,NoVeg,10,2,0.0032,NoVeg_Bare,0,nocrop,0,nocrop,0,nocrop,10,Not crop,3,Bare soil/rock/sand throughout the year (NOT part of crop cycle)
+3,NoVeg_Built,NoVeg,10,3,0.0055,NoVeg_Built,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,
+7,NoVeg_Water,NoVeg,10,7,0.031,NoVeg_Water,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,
+9,Mixed-path,NoVeg,10,9,0.011,Mixed-path,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,>30% NoVeg_bare/built and >30% LowVeg (and not built or New_plant) 
+10,Cleared,LowVeg,20,10,0.003,Cleared,0,nocrop,0,nocrop,0,nocrop,10,Not crop,1,"Med/High vegetation has been cleared witin the year, but no other land use is evident"
+11,TreePlant-new,LowVeg,20,11,0.001,NewPlant,0,nocrop,0,nocrop,0,nocrop,10,Not crop,0,Planted trees (tree plantation or orchard) <1 year
+12,Grassland-Natural,LowVeg,20,12,0.091,Grassland-Natural,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,"natural grassland, dry year-round, <30% tree cover"
+13,Grassland-Managed,LowVeg,20,13,0.119,Grassland-Managed,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,"planted grass or managed pasture,  <30% tree cover"
+15,Grassland,LowVeg,20,99,,unknown,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,"grass,  <30% tree cover -- unknown if planted or natural"
+17,Grassland-Wet,LowVeg,20,17,0.121,Grassland-Wet,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,natural grassland that is flooded at some point in year
+18,Mixed-GrassEdge,LowVeg,20,19,0.0121,Mixed-VegEdge,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,
+19,Mixed-FieldEdge,LowVeg,20,19,0.0121,Mixed-VegEdge,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,Mix of Crop_low and other low/med veg at edge of field
+20,LowVeg,LowVeg,20,99,,unknown,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,
+23,Crops-Horticulture,LowVeg,20,23,0.001051,Crops-horticulture,1,crop,1,crop,1,crop,23,Horticulture,2,crops with greenhouse/tarp structure for part of year
+24,Crops-Tobacco,LowVeg,20,35,0.008,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
+25,Crops-Sesame,LowVeg,20,25,0.00111,Crops-Sesame,1,crop,1,crop,1,crop,25,Sesame,5,
+26,Crops-row,LowVeg,20,35,0.008,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
+30,Crop-Low,LowVeg,20,99,,unknown,1,crop,1,crop,1,crop,10,Crops-unknown,5,unknown annual crop
+31,Crops-Soybeans,LowVeg,20,31,0.168,Crops-SoyCornWheat,1,crop,1,crop,1,crop,31,SoyCornWheat,5,
+32,Crops-Beans,LowVeg,20,35,0.008,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
+22,Crops-Wheat,LowVeg,20,31,0.168,Crops-SoyCornWheat,1,crop,1,crop,1,crop,31,SoyCornWheat,5,
+33,Crops-Corn,LowVeg,20,33,0.168,Crops-SoyCornWheat,1,crop,1,crop,1,crop,31,SoyCornWheat,5,
+34,Crops-Mandioca,LowVeg,20,34,0.0063,Crops-Mandioca,1,crop,1,crop,1,crop,35,Smallholder mix,2,Mandioca -- Cassava -- Yucca
+35,Crops-mix,LowVeg,20,35,0.008,Crops-mix,1,crop,1,crop,1,crop,34,Mandioca,5,intercropping with each crop <30m across
+36,Crops-Peanuts,LowVeg,20,35,0.008,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
+37,Crops-Rice,LowVeg,20,37,0.0105,Crops-Rice,1,crop,1,crop,1,crop,37,Rice,2,
+38,Crops-Sugar,LowVeg,20,38,0.0084,Crops-Sugar,1,crop,1,crop,1,crop,38,Sugar,5,
+39,Crops-Cotton,LowVeg,20,39,0.001049,Crops-Cotton,1,crop,1,crop,1,crop,39,Cotton,5,
+40,Crop_Med,MedVeg,40,99,,unknown,2,medcrop,2,medcrop,1,crop,40,Shrub crops,5,unknown or other shrubby perrenial crops (i.e. vineyards)
+41,Crops-Vineyard,MedVeg,40,41,0.0001,Crops-Vineyard,2,medcrop,2,medcrop,1,crop,41,Vineyard,5,
+42,Crops-Yerba-Mate,MedVeg,40,42,0.00422,Crops-Yerba-Mate,2,medcrop,2,medcrop,1,crop,42,YerbaMate,5,
+43,Crops-Banana,MedVeg,40,43,0.001048,Crops-Banana,2,medcrop,2,medcrop,1,crop,43,Banana,5,
+45,Crops-Orchard-new,LowVeg,20,99,,unknown,1,crop,1,crop,1,crop,45,Tree crops,0,<1 year
+46,Crops-Orchard,MedVeg,40,46,0.001052,Crops-Orchard,2,medcrop,2,medcrop,1,crop,50,Tree crops,5,
+47,Crops-Med_forest,MedVeg,40,47,0.0005,Crops-Shrub47,2,medcrop,2,medcrop,1,crop,47,ShrubCrop47,5,shrubby crops in/around forest -- probably cannibis
+51,Grass_tree-mix,MedVeg,50,51,0.005,Grass_tree-mix,0,nocrop,0,nocrop,0,nocrop,10,Not crop,10,Grassland with trees (30-70% closed canopy)
+52,Shrub,MedVeg,50,52,0.026,Shrub,0,nocrop,0,nocrop,0,nocrop,10,Not crop,3,natural shrubs / regrowth
+54,Trees-Orchard-closed,MedVeg,70,60,0.001052,Crops-Orchard,2,medcrop,3,tree,0,nocrop,45,Tree crops with >80% canopy closure,5,Orchard with >80% canopy closure
+56,TreePlant-young,MedVeg,50,60,0.012,TreePlant,0,nocrop,0,nocrop,0,nocrop,10,Not crop,2,1-2 yrs
+58,Burnt-woody,MedVeg,50,58,0.001,Burnt-woody,0,nocrop,0,nocrop,0,nocrop,10,Not crop,0,woody veg (shrub or trees that is burnt & browned during the year but does not appear cleared
+57,Wet medium veg,MedVeg,50,52,0.026,Shrub,0,nocrop,0,nocrop,0,nocrop,10,Not crop,3,
+60,TreePlant,HighVeg,70,60,0.012,TreePlant,0,nocrop,3,tree,0,nocrop,10,Not crop,5,age not specified (better to use age cat if known)
+65,Trees-Open,HighVeg,70,65,0.013,Trees-disturbed,0,nocrop,3,tree,0,nocrop,10,Not crop,20,Mature trees with gaps (>70% closed canopy) or <10m from edge
+66,TreePlant-mature,HighVeg,70,60,0.012,TreePlant,0,nocrop,3,tree,0,nocrop,10,Not crop,5,>=3 years
+64,Shrub-Forest,HighVeg,70,64,0.1,Trees-Forest_shrub,0,nocrop,3,tree,0,nocrop,10,Not crop,20,
+67,Trees-Forest_decid,HighVeg,70,80,0.213,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,20,">70% crown cover when green, but has deciduous period (~sept)"
+68,Trees-Forest_palm,HighVeg,70,68,0.0051,Trees-Forest_palm,0,nocrop,3,tree,0,nocrop,10,Not crop,20,>70% canopy closure of homogenous palm trees or other forest with prominent palms
+77,Tree-Water_mix,HighVeg,70,77,0.0049,Trees-wet,0,nocrop,3,tree,0,nocrop,10,Not crop,20,Mix of >= 20% water and >=40% Trees
+80,Trees-Forest,HighVeg,70,80,0.213,Trees-Forest,0,nocrop,3,tree,0,nocrop,10,Not crop,20,">90% canopy closure of trees with large, heterogenous crowns"
+99,unknown,unknown,99,99,,unknown,99,unknown,99,unknown,99,unknown,99,unknown,0,no idea -- this is a placeholder for data checking and should be removed for all classification
+98,N_NoCrop,unknown,99,98,,NoCrop,0,nocrop,0,nocrop,0,nocrop,98,Not crop,20,for simple data checking exercises where only crop/noCrop is needed

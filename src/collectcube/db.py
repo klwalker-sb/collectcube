@@ -100,7 +100,7 @@ def make_main_support_tables(engine):
             Column('LC5id', Integer(), primary_key=True),
             Column('LC5type', Text()) 
                   )
-        
+      
         PixVar = Table('PixelVerification', metadata,
             Column('recID', Integer(), primary_key=True, autoincrement=True),
             Column('PID', Text(), ForeignKey(pix_table.c.PID), nullable=False),
@@ -129,15 +129,21 @@ def make_main_support_tables(engine):
             Column('Age', Text()),
             Column('Stability', Text()),
             Column('State', Text()),
+            Column('Type',Text()),
+            Column('Width',Integer()),
             Column('Notes', Text(255)),
             Column('entry_lev', Integer()),
-            Column('FieldWidth',Integer()),
-            Column('source', Text(255))
+            Column('doubt_CNC', Integer()),
+            Column('doubt_LC', Integer()),
+            Column('doubt_LC5', Integer()),
+            Column('source', Text(255)),
+            Column('Image',Integer()),
                 )
 
         metadata.create_all(conn, checkfirst=True)
         print('added LC5 and empty PixVar table to db')
-        
+
+
 def populate_LC5_table(engine):
     lc5_table = Table('LC5', MetaData(), autoload_with=engine)
     LC5Classes = [
