@@ -14,7 +14,7 @@ LC_UNQ,USE_NAME,LC5_name,LC5,LC25,perLC25E,LC25_name,LC3,LC3_name,LC4,LC4_name,L
 18,Mixed-GrassEdge,LowVeg,20,19,0.0121,Mixed-VegEdge,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,
 19,Mixed-FieldEdge,LowVeg,20,19,0.0121,Mixed-VegEdge,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,Mix of Crop_low and other low/med veg at edge of field
 20,LowVeg,LowVeg,20,99,,unknown,0,nocrop,0,nocrop,0,nocrop,10,Not crop,5,
-23,Crops-Horticulture,LowVeg,20,23,0.001051,Crops-horticulture,1,crop,1,crop,1,crop,23,Horticulture,2,crops with greenhouse/tarp structure for part of year
+23,Crops-Horticulture,LowVeg,20,23,0.001051,Crops-Horticulture,1,crop,1,crop,1,crop,23,Horticulture,2,crops with greenhouse/tarp structure for part of year
 24,Crops-Tobacco,LowVeg,20,35,0.008,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,
 25,Crops-Sesame,LowVeg,20,25,0.00111,Crops-Sesame,1,crop,1,crop,1,crop,25,Sesame,5,
 26,Crops-row,LowVeg,20,35,0.008,Crops-mix,1,crop,1,crop,1,crop,35,Smallholder mix,5,

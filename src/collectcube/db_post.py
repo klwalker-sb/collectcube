@@ -225,7 +225,7 @@ def get_sample_for_date(target_date,local_db_path,sample_type,sample_cats,lut):
 def prioritize_row(row):
     if (row['doubt_CNC'] == 1) or (row['doubt_LC'] == 1) or (row['doubt_LC5'] == 1):
         priority = 3
-    if (row['LC25_name'] == 'NoVeg_Built') & (row['sampgroup'] != 'rd_samp') & (row['source'] == 'GE'):
+    elif (row['LC25_name'] == 'NoVeg_Built') & (row['sampgroup'] != 'rd_samp') & (row['source'] == 'GE'):
         priority = 1
     elif (row['LC25_name'] == 'NoVeg_Bare') & (row['sampgroup'] != 'rd_samp') & (row['source'] == 'GE'):
         priority = 1
@@ -268,28 +268,16 @@ def balance_training_data(yr, lut, pixdf, out_dir, cutoff, mix_factor):
     ## Allow only one pixel per neighborhood per class:
     pixdf = pixdf.sort_values('HOMOINT', ascending=False).drop_duplicates(subset=['PID0', 'LC25_name'])
     ##TODO: consider alternatives to taking only pixel with highest internal purity
+    ## Separate highest quality sample to select from first 
+    pixdf['priority'] = pixdf.apply(lambda row : prioritize_row(row), axis=1) 
     
-    ## get estimated class percents (this is estimated from other maps and in column in LUT)
-    classprev = lut.sort_values('perLC25E')[["perLC25E", "LC25_name"]]
-    classprev= classprev.dropna()
-    classprev = classprev.drop_duplicates(subset = "perLC25E") 
-    tot = classprev["perLC25E"].sum()
-    print("tot percent =:", tot)     # should be 1
-   
-    ## get highest class percent
-    mmax = classprev["perLC25E"].max()
-    ## convert all class percents to ratio of highest
-          ## (keeping all samples from mmax class (n), n = mmax * TotalSamp  -> TotalSamp = n/mmax )
-    classprev["perLC25E"] = classprev["perLC25E"]/mmax
-    ## get number of samples for each class
+    ## get number of samples for each class and priority level
     counts = pixdf['LC25_name'].value_counts().reset_index()
     counts.columns = ['LC25_name', 'counts']
     print(counts)
     counts.set_index('LC25_name',inplace=True)
     print(f'Total sample size before balancing is: {sum(counts["counts"])}')
 
-    ## Separate highest quality sample to select from first 
-    pixdf['priority'] = pixdf.apply(lambda row : prioritize_row(row), axis=1) 
     p1_pixdf = pixdf[pixdf['priority'] == 1]
     p1_counts = p1_pixdf['LC25_name'].value_counts().reset_index()
     p1_counts.columns = ['LC25_name', 'p1_counts']
@@ -298,10 +286,23 @@ def balance_training_data(yr, lut, pixdf, out_dir, cutoff, mix_factor):
     p2_counts = p2_pixdf['LC25_name'].value_counts().reset_index()
     p2_counts.columns = ['LC25_name', 'p2_counts']
     p2_counts.set_index('LC25_name',inplace=True)
+
     all_counts = pd.concat([counts,p1_counts,p2_counts],axis=1)
     all_counts['p1_counts'].fillna(0,inplace=True)
     all_counts['p2_counts'].fillna(0,inplace=True)
     
+    ## to balance, get estimated class percents (this is estimated from other maps and in column in LUT)
+    classprev = lut.sort_values('perLC25E')[["perLC25E", "LC25_name"]]
+    classprev= classprev.dropna()
+    classprev = classprev.drop_duplicates(subset = "perLC25E") 
+    tot = classprev["perLC25E"].sum()
+    print("tot percent =:", tot)     # should be 1
+    ## get highest class percent
+    mmax = classprev["perLC25E"].max()
+    ## convert all class percents to ratio of highest
+          ## (keeping all samples from mmax class (n), n = mmax * TotalSamp  -> TotalSamp = n/mmax )
+    classprev["perLC25E"] = classprev["perLC25E"]/mmax
+
     ratiodf = classprev.merge(all_counts, left_on="LC25_name", right_on="LC25_name", how='left')
     maxsamp = ratiodf.at[ratiodf['perLC25E'].idxmax(), 'counts']
     print(f'samp size for class with max proportion is {maxsamp}')
@@ -314,18 +315,16 @@ def balance_training_data(yr, lut, pixdf, out_dir, cutoff, mix_factor):
                            np.where(ratiodf["counts"] < cutoff, 1, 
                               np.where(ratiodf["perLC25E"] * maxsamp < ratiodf["counts"], 
                                  np.maximum((cutoff/ratiodf["counts"]), (ratiodf["perLC25E"] * maxsamp / ratiodf["counts"])),   
-                            1)))
-    
-    #ratiodf['ratios'] = np.where(ratiodf["LC25_name"].isin(mixed_classes), (ratiodf['ratios'] * mix_factor), ratiodf['ratios'])
+                            1))).round(3)
     
     ratiodf['p1_draw'] =  np.where( ratiodf['p1_counts'] == 0, 0, 
                                    np.where(ratiodf['p1_counts'] <= ratiodf['counts'] * ratiodf['ratios'], 1,  
-                                            (ratiodf['ratios']*ratiodf['counts'])/ratiodf['p1_counts']))
+                                            (ratiodf['ratios']*ratiodf['counts'])/ratiodf['p1_counts'])).round(3)
     ratiodf['p2_draw'] =  np.where( ratiodf['p2_counts'] == 0, 0,
                                    np.where(ratiodf['p1_counts'] + ratiodf['p2_counts'] < ratiodf['counts'] * ratiodf['ratios'], 1,
-                                            (ratiodf['ratios']*ratiodf['counts'] - ratiodf['p1_counts']) / ratiodf['p2_counts'])) 
-    ratiodf['p3_draw'] =  np.where(ratiodf['p2_counts'] + ratiodf['p2_counts'] >  ratiodf['counts'] * ratiodf['ratios'], 0,
-                                   (ratiodf['ratios']*ratiodf['counts'] - (ratiodf['p1_counts']+ratiodf['p2_counts']))/ (ratiodf['counts'] - (ratiodf['p1_counts']+ratiodf['p2_counts'])))
+                                            (ratiodf['ratios']*ratiodf['counts'] - ratiodf['p1_counts']) / ratiodf['p2_counts'])).round(3)
+    ratiodf['p3_draw'] =  np.where(ratiodf['p1_counts'] + ratiodf['p2_counts'] >  ratiodf['counts'] * ratiodf['ratios'], 0,
+                                   (ratiodf['ratios']*ratiodf['counts'] - (ratiodf['p1_counts']+ratiodf['p2_counts']))/ (ratiodf['counts'] - (ratiodf['p1_counts']+ratiodf['p2_counts']))).round(3)
                                    
                                    
     print(ratiodf)
@@ -340,7 +339,7 @@ def balance_training_data(yr, lut, pixdf, out_dir, cutoff, mix_factor):
     totsamp = sum(full_samp['LC25_name'].value_counts())
     print(f'Total sample size after balancing is: {totsamp}')
     
-    pixdf_path = os.path.join(out_dir,f'{yr-1}pixdf_bal{cutoff}_mix{mix_factor}.csv')
-    pd.DataFrame.to_csv(pixdf_ratios, pixdf_path)
+    pixdf_path = os.path.join(out_dir,f'bal{cutoff}mix{mix_factor}_{yr-1}.csv')
+    pd.DataFrame.to_csv(full_samp, pixdf_path)
     
-    return pixdf_ratios
+    return full_samp
