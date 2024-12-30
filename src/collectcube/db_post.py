@@ -310,7 +310,11 @@ def balance_training_data(yr, lut, pixdf, out_dir, cutoff, mix_factor):
     ##    Otherwise reduce according to proportion, but do not allow to go below cutoff
     ##    Allow for separate treatment of mixed classes based on mix_factor
     
-    mixed_classes = ["Mixed-VegEdge", "Mixed-path", "Crops-mix"]
+    mixed_classes = ["Mixed-VegEdge", "Mixed-path", "Crops-mix", "Mixed-GrassEdge", "Mixed-FieldEdge", 
+                     "Crops-Mandioca", "Crops-Horticulture","Crops-Sesame"]
+    ## For crop-type map, "Crops-Mandioca", "Crops-Horticulture","Crops-Sesame" are removed from this list so that they can use the
+    ##       full sample (up to the cutoff), whereas for mixed-ratio progression analyses they are included so not to exceed the intended
+    ##       ratio. TODO: make a parameter to indicate which way they will be treated. 
     ratiodf['ratios'] = np.where(ratiodf["LC25_name"].isin(mixed_classes),(mix_factor * ratiodf["perLC25E"] * maxsamp / ratiodf["counts"]),
                            np.where(ratiodf["counts"] < cutoff, 1, 
                               np.where(ratiodf["perLC25E"] * maxsamp < ratiodf["counts"], 
